@@ -169,7 +169,7 @@ export default function App() {
           input[type=range] { cursor: pointer; }
           textarea:focus, input:focus { outline: 2px solid #f5a623 !important; }
         `}</style>
-        <div style={{ maxWidth: "100%",, margin: "0 auto" }}>
+        <div style={{ maxWidth: "100%", margin: "0 auto" }}>
           {formSubmitted ? (
             <div style={{ textAlign: "center", animation: "fadeUp .5s ease", ...card, padding: 60 }}>
               <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
