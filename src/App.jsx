@@ -169,7 +169,7 @@ export default function App() {
           input[type=range] { cursor: pointer; }
           textarea:focus, input:focus { outline: 2px solid #f5a623 !important; }
         `}</style>
-        <div style={{ maxWidth: 560, margin: "0 auto" }}>
+        <div style={{ maxWidth: "100%",, margin: "0 auto" }}>
           {formSubmitted ? (
             <div style={{ textAlign: "center", animation: "fadeUp .5s ease", ...card, padding: 60 }}>
               <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
@@ -253,7 +253,7 @@ export default function App() {
           @keyframes fadeUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:none } }
           @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.5 } }
         `}</style>
-        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <div style={{ maxWidth: "100%", margin: "0 auto" }}>
           <button onClick={() => setView("dashboard")} style={{ background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 13, padding: 0, marginBottom: 28 }}>← Back to dashboard</button>
 
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
@@ -348,7 +348,7 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ padding: "40px", maxWidth: 1100, margin: "0 auto" }}>
+      <div style={{ padding: "40px", maxWidth: "100%", margin: "0 auto" }}>
         {/* Hero */}
         <div style={{ marginBottom: 40, animation: "fadeUp .4s ease" }}>
           <h1 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 36, margin: "0 0 6px" }}>Good morning, Coach 👋</h1>
