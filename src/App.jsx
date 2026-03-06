@@ -376,7 +376,7 @@ export default function App() {
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", width: "100%", gap: 24 }}>
           {/* Pending check-ins */}
           <div>
             <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
