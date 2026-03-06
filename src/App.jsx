@@ -20,6 +20,7 @@ function AIAnalysisStream({ checkin, onDone }) {
     async function run() {
       const response = await fetch("/api/anthropic", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
@@ -348,7 +349,7 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ padding: "40px", width: "100%" }}>
+      <div style={{ padding: "40px", maxWidth: "100%", margin: "0 auto" }}>
         {/* Hero */}
         <div style={{ marginBottom: 40, animation: "fadeUp .4s ease" }}>
           <h1 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 36, margin: "0 0 6px" }}>Good morning, Coach 👋</h1>
@@ -375,7 +376,7 @@ export default function App() {
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(280px, 320px)", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 24 }}>
           {/* Pending check-ins */}
           <div>
             <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
