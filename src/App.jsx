@@ -8,7 +8,7 @@ function AIAnalysisStream({ checkin, onDone }) {
   const [text, setText] = useState("");
   const [done, setDone] = useState(false);
 
-  useEffect(() => { if (clients.length > 0) return;
+  useEffect(() => {
     let cancelled = false;
     async function run() {
       const response = await fetch("/api/anthropic", {
@@ -117,7 +117,7 @@ export default function App() {
   const red = "#f87171";
 
   // Load data from Supabase
-  useEffect(() => { if (clients.length > 0) return;
+  useEffect(() => {
     if (!isSignedIn || !user) return;
     loadData();
   }, [isSignedIn, user]);
