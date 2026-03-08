@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useUser, useClerk, SignIn } from "@clerk/react";
+import { useUser, useClerk, SignIn } from "@clerk/clerk-react";
 import { supabase } from "./supabaseClient";
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -243,8 +243,15 @@ export default function App() {
   // Sign in page
   if (!isSignedIn) {
     return (
-      <div style={{ background: bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap'); * { box-sizing: border-box; }`}</style>
+      <div style={{ background: "#0d0d0d", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap');
+          * { box-sizing: border-box; }
+          .cl-rootBox, .cl-card { background: #161616 !important; }
+          .cl-headerTitle, .cl-headerSubtitle { color: #fff !important; }
+          .cl-formFieldLabel { color: #999 !important; }
+          .cl-formButtonPrimary { background: #f5a623 !important; color: #000 !important; }
+        `}</style>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 40 }}>
           <div style={{ width: 40, height: 40, background: accent, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚡</div>
           <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26 }}>CheckIn AI</span>
@@ -313,7 +320,28 @@ export default function App() {
                 <SliderInput label="Stress Level" value={clientForm.stress} onChange={v => setClientForm(p => ({ ...p, stress: v }))} color={red} />
                 <SliderInput label="Energy Levels" value={clientForm.energy} onChange={v => setClientForm(p => ({ ...p, energy: v }))} color={green} />
                 <SliderInput label="Hunger Levels" value={clientForm.hunger} onChange={v => setClientForm(p => ({ ...p, hunger: v }))} color="#fb923c" />
-                <SliderInput label="Training Adherence" value={clientForm.adherence} onChange={v => setClientForm(p => ({ ...p, adherence: v }))} min={0} max={100} color={accent} />
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                    <label style={{ fontSize: 12, color: "#999", textTransform: "uppercase", letterSpacing: 1 }}>Training Adherence</label>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: accent }}>{clientForm.adherence}%</span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+                    {[0, 25, 50, 75, 100].map(val => (
+                      <button key={val} type="button" onClick={() => setClientForm(p => ({ ...p, adherence: val }))}
+                        style={{ padding: "10px 0", borderRadius: 8, border: `1px solid ${clientForm.adherence === val ? accent : "#333"}`, background: clientForm.adherence === val ? "#1e1200" : "#1a1a1a", color: clientForm.adherence === val ? accent : "#666", fontWeight: clientForm.adherence === val ? 700 : 400, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+                        {val}%
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 8 }}>
+                    {[10, 33, 60, 90].map(val => (
+                      <button key={val} type="button" onClick={() => setClientForm(p => ({ ...p, adherence: val }))}
+                        style={{ padding: "8px 0", borderRadius: 8, border: `1px solid ${clientForm.adherence === val ? accent : "#2a2a2a"}`, background: clientForm.adherence === val ? "#1e1200" : "transparent", color: clientForm.adherence === val ? accent : "#555", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                        {val}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div style={{ ...card, padding: 28, marginBottom: 24 }}>
