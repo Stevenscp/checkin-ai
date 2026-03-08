@@ -1,2 +1,5 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body, #root { width: 100%; min-height: 100vh; background: #0d0d0d; }
+html { background: #0d0d0d; }
+iframe, .cl-rootBox { background: transparent !important; }
+body > div { background: #0d0d0d; }

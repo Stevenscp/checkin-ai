@@ -9,7 +9,7 @@ if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Clerk Publishable Key");
 }
 
-createRoot(document.getElementById("root")).render(
+document.documentElement.style.background="#0d0d0d"; createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
       <App />
