@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useUser, useClerk, SignIn } from "@clerk/clerk-react";
+import { useUser, useClerk, SignIn } from "@clerk/react";
 import { supabase } from "./supabaseClient";
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
