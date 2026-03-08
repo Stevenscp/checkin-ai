@@ -256,7 +256,7 @@ export default function App() {
           <div style={{ width: 40, height: 40, background: accent, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚡</div>
           <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26 }}>CheckIn AI</span>
         </div>
-        <SignIn appearance={{ variables: { colorPrimary: "#f5a623", colorBackground: "#161616", colorText: "#ffffff", colorInputBackground: "#1e1e1e", colorInputText: "#ffffff", colorTextSecondary: "#999999", colorNeutral: "#ffffff" }, elements: { card: { border: "1px solid #2a2a2a", boxShadow: "none" }, socialButtonsBlockButton: { border: "1px solid #333", background: "#1e1e1e", color: "#fff" }, dividerLine: { background: "#2a2a2a" }, dividerText: { color: "#555" }, footerActionLink: { color: "#f5a623" } } }} />
+        <SignIn appearance={{ variables: { colorPrimary: "#f5a623", colorBackground: "#161616", colorText: "#ffffff", colorInputBackground: "#1e1e1e", colorInputText: "#ffffff", colorTextSecondary: "#999999", colorNeutral: "#ffffff" }, elements: { card: { border: "1px solid #2a2a2a", boxShadow: "none" }, socialButtonsBlockButton: { border: "1px solid #333", background: "#1e1e1e", color: "#fff" }, dividerLine: { background: "#2a2a2a" }, dividerText: { color: "#555" }, footerActionLink: { color: "#f5a623" }, footerActionText: { color: "#aaaaaa" } } }} />
       </div>
     );
   }
