@@ -74,7 +74,25 @@ Provide coaching analysis and recommendations.`
 export default function App() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { signOut } = useClerk();
+  const [upgrading, setUpgrading] = useState(false);
   const [view, setView] = useState("dashboard");
+
+  async function handleUpgrade() {
+    setUpgrading(true);
+    try {
+      const res = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          email: user.emailAddresses[0]?.emailAddress
+        })
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch (e) { console.error(e); }
+    setUpgrading(false);
+  }
   const [clients, setClients] = useState([]);
   const [checkins, setCheckins] = useState([]);
   const [selectedCheckin, setSelectedCheckin] = useState(null);
@@ -256,7 +274,7 @@ export default function App() {
           <div style={{ width: 40, height: 40, background: accent, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚡</div>
           <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26 }}>CheckIn AI</span>
         </div>
-        <SignIn appearance={{ variables: { colorPrimary: "#f5a623", colorBackground: "#161616", colorText: "#ffffff", colorInputBackground: "#1e1e1e", colorInputText: "#ffffff", colorTextSecondary: "#999999", colorNeutral: "#ffffff" }, elements: { card: { border: "1px solid #2a2a2a", boxShadow: "none" }, socialButtonsBlockButton: { border: "1px solid #333", background: "#1e1e1e", color: "#fff" }, dividerLine: { background: "#2a2a2a" }, dividerText: { color: "#555" }, footerActionLink: { color: "#f5a623" }, footerActionText: { color: "#aaaaaa" } } }} />
+        <SignIn appearance={{ variables: { colorPrimary: "#f5a623", colorBackground: "#161616", colorText: "#ffffff", colorInputBackground: "#1e1e1e", colorInputText: "#ffffff" } }} />
       </div>
     );
   }
@@ -477,6 +495,18 @@ export default function App() {
           <div style={{ color: "#555", fontSize: 14, textAlign: "center", paddingTop: 60 }}>Loading your dashboard...</div>
         ) : (
           <>
+            {/* Trial Banner */}
+            <div style={{ background: "linear-gradient(135deg, #1a1200, #1a0d00)", border: "1px solid #3a2800", borderRadius: 12, padding: "16px 24px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <span style={{ color: accent, fontWeight: 700, fontSize: 14 }}>🎉 7-day free trial active</span>
+                <span style={{ color: "#666", fontSize: 13, marginLeft: 12 }}>Upgrade anytime to keep full access at $99/month</span>
+              </div>
+              <button onClick={handleUpgrade} disabled={upgrading}
+                style={{ background: accent, color: "#000", border: "none", borderRadius: 8, padding: "10px 20px", fontWeight: 700, cursor: "pointer", fontSize: 13, fontFamily: "inherit", opacity: upgrading ? 0.7 : 1 }}>
+                {upgrading ? "Redirecting..." : "Upgrade to Pro →"}
+              </button>
+            </div>
+
             <div style={{ marginBottom: 40, animation: "fadeUp .4s ease" }}>
               <h1 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 36, margin: "0 0 6px" }}>
                 Good morning, {user.firstName || "Coach"} 👋
