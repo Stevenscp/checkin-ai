@@ -76,6 +76,10 @@ export default function App() {
   const { signOut } = useClerk();
   const [upgrading, setUpgrading] = useState(false);
   const [view, setView] = useState("dashboard");
+  const [settingsTab, setSettingsTab] = useState("general");
+  const [savedSettings, setSavedSettings] = useState(false);
+  const [coachBio, setCoachBio] = useState("");
+  const [coachTitle, setCoachTitle] = useState("");
 
   async function handleUpgrade() {
     setUpgrading(true);
@@ -465,6 +469,229 @@ export default function App() {
     );
   }
 
+
+  // Settings page
+  if (view === "settings") {
+    const tabs = ["general", "account", "billing", "privacy"];
+    const tabLabels = { general: "General", account: "Account", billing: "Billing", privacy: "Privacy" };
+
+    return (
+      <div style={{ background: "#0d0d0d", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap');
+          * { box-sizing: border-box; }
+          @keyframes fadeUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:none } }
+          .settings-tab:hover { color: #fff !important; }
+        `}</style>
+
+        {/* Header */}
+        <div style={{ borderBottom: "1px solid #1e1e1e", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => setView("dashboard")}>
+            <div style={{ width: 32, height: 32, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
+            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>CheckIn AI</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button onClick={() => setView("dashboard")} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Dashboard</button>
+            <button onClick={() => signOut()} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Sign out</button>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", minHeight: "calc(100vh - 73px)" }}>
+          {/* Sidebar */}
+          <div style={{ borderRight: "1px solid #1e1e1e", padding: "32px 0" }}>
+            <p style={{ color: "#444", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, padding: "0 24px", marginBottom: 12 }}>Settings</p>
+            {tabs.map(tab => (
+              <button key={tab} className="settings-tab" onClick={() => setSettingsTab(tab)}
+                style={{ width: "100%", textAlign: "left", padding: "10px 24px", background: settingsTab === tab ? "#1a1a1a" : "none", border: "none", borderLeft: settingsTab === tab ? "2px solid #f5a623" : "2px solid transparent", color: settingsTab === tab ? "#fff" : "#666", cursor: "pointer", fontSize: 14, fontFamily: "inherit", transition: "all .15s" }}>
+                {tabLabels[tab]}
+              </button>
+            ))}
+          </div>
+
+          {/* Content */}
+          <div style={{ padding: "40px", maxWidth: 640, animation: "fadeUp .3s ease" }}>
+
+            {/* GENERAL TAB */}
+            {settingsTab === "general" && (
+              <div>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>General</h2>
+                <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Manage your coaching profile and preferences.</p>
+
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
+                  <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Coach Profile</h3>
+                  {[["Display Name", user.firstName + " " + (user.lastName || ""), false], ["Email", user.emailAddresses[0]?.emailAddress, true]].map(([label, val, disabled]) => (
+                    <div key={label} style={{ marginBottom: 20 }}>
+                      <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>{label}</label>
+                      <input defaultValue={val} disabled={disabled}
+                        style={{ width: "100%", background: disabled ? "#111" : "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "10px 14px", color: disabled ? "#444" : "#fff", fontSize: 14, fontFamily: "inherit", cursor: disabled ? "not-allowed" : "text" }} />
+                      {disabled && <p style={{ color: "#444", fontSize: 11, margin: "4px 0 0" }}>Managed by your sign-in provider</p>}
+                    </div>
+                  ))}
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>Your Title</label>
+                    <input placeholder="e.g. Online Strength Coach" value={coachTitle} onChange={e => setCoachTitle(e.target.value)}
+                      style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "10px 14px", color: "#fff", fontSize: 14, fontFamily: "inherit" }} />
+                  </div>
+                  <div style={{ marginBottom: 24 }}>
+                    <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>Bio</label>
+                    <textarea rows={3} placeholder="Tell clients a bit about yourself..." value={coachBio} onChange={e => setCoachBio(e.target.value)}
+                      style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "10px 14px", color: "#fff", fontSize: 14, fontFamily: "inherit", resize: "vertical" }} />
+                  </div>
+                  <button onClick={() => { setSavedSettings(true); setTimeout(() => setSavedSettings(false), 2000); }}
+                    style={{ background: "#f5a623", color: "#000", border: "none", borderRadius: 8, padding: "10px 24px", fontWeight: 700, cursor: "pointer", fontSize: 14, fontFamily: "inherit" }}>
+                    {savedSettings ? "✓ Saved!" : "Save Changes"}
+                  </button>
+                </div>
+
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28 }}>
+                  <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Notifications</h3>
+                  {[["Email me when a client submits a check-in", true], ["Weekly summary of client progress", true], ["Product updates and announcements", false]].map(([label, def]) => (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <span style={{ color: "#ccc", fontSize: 14 }}>{label}</span>
+                      <div style={{ width: 44, height: 24, background: def ? "#f5a623" : "#2a2a2a", borderRadius: 12, position: "relative", cursor: "pointer" }}>
+                        <div style={{ width: 18, height: 18, background: "#fff", borderRadius: "50%", position: "absolute", top: 3, left: def ? 23 : 3, transition: "left .2s" }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ACCOUNT TAB */}
+            {settingsTab === "account" && (
+              <div>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Account</h2>
+                <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Manage your account security and data.</p>
+
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
+                  <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Account Info</h3>
+                  <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 24 }}>
+                    <div style={{ width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e07b00)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 20, color: "#000" }}>
+                      {(user.firstName?.[0] || user.emailAddresses[0]?.emailAddress?.[0] || "C").toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ color: "#fff", fontWeight: 600, fontSize: 15 }}>{user.firstName} {user.lastName}</div>
+                      <div style={{ color: "#555", fontSize: 13 }}>{user.emailAddresses[0]?.emailAddress}</div>
+                      <div style={{ color: "#f5a623", fontSize: 11, marginTop: 2 }}>Pro Plan · Trial Active</div>
+                    </div>
+                  </div>
+                  <div style={{ borderTop: "1px solid #222", paddingTop: 20 }}>
+                    <p style={{ color: "#555", fontSize: 13, margin: "0 0 12px" }}>Member since {new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
+                  </div>
+                </div>
+
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
+                  <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 8px" }}>Password & Security</h3>
+                  <p style={{ color: "#555", fontSize: 13, margin: "0 0 16px" }}>Password and security settings are managed through your sign-in provider.</p>
+                  <button style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "10px 20px", color: "#ccc", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+                    Manage Security Settings →
+                  </button>
+                </div>
+
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, borderColor: "#2a1a1a" }}>
+                  <h3 style={{ color: "#f87171", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 8px" }}>Danger Zone</h3>
+                  <p style={{ color: "#555", fontSize: 13, margin: "0 0 16px" }}>Once you delete your account, all data will be permanently removed.</p>
+                  <button style={{ background: "none", border: "1px solid #f87171", borderRadius: 8, padding: "10px 20px", color: "#f87171", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+                    Delete Account
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* BILLING TAB */}
+            {settingsTab === "billing" && (
+              <div>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Billing</h2>
+                <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Manage your subscription and payment details.</p>
+
+                <div style={{ background: "linear-gradient(135deg, #1a1200, #161616)", border: "1px solid #3a2800", borderRadius: 12, padding: 28, marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+                    <div>
+                      <h3 style={{ color: "#f5a623", fontSize: 16, fontWeight: 700, margin: "0 0 4px" }}>CheckIn AI Pro</h3>
+                      <p style={{ color: "#666", fontSize: 13, margin: 0 }}>$99 / month · 7-day free trial</p>
+                    </div>
+                    <span style={{ background: "#1e3a1e", color: "#4ade80", fontSize: 11, padding: "4px 12px", borderRadius: 20, fontWeight: 600 }}>Trial Active</span>
+                  </div>
+                  <div style={{ borderTop: "1px solid #2a2000", paddingTop: 20, marginBottom: 20 }}>
+                    {[["Plan", "CheckIn AI Pro"], ["Status", "Free Trial"], ["Billing cycle", "Monthly"], ["Amount", "$99/month after trial"]].map(([label, val]) => (
+                      <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                        <span style={{ color: "#555", fontSize: 13 }}>{label}</span>
+                        <span style={{ color: "#ccc", fontSize: 13 }}>{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={handleUpgrade} disabled={upgrading}
+                    style={{ width: "100%", background: "#f5a623", color: "#000", border: "none", borderRadius: 8, padding: "12px", fontWeight: 700, cursor: "pointer", fontSize: 14, fontFamily: "inherit" }}>
+                    {upgrading ? "Redirecting to Stripe..." : "Manage Subscription →"}
+                  </button>
+                </div>
+
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28 }}>
+                  <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px" }}>What's Included</h3>
+                  {["Unlimited AI check-in analysis", "Unlimited clients", "AI-powered coaching suggestions", "Progress tracking dashboard", "Secure client check-in forms", "Priority support"].map(feature => (
+                    <div key={feature} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>
+                      <span style={{ color: "#4ade80", fontSize: 14 }}>✓</span>
+                      <span style={{ color: "#ccc", fontSize: 14 }}>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* PRIVACY TAB */}
+            {settingsTab === "privacy" && (
+              <div>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Privacy</h2>
+                <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Control how your data and your clients' data is handled.</p>
+
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
+                  <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Data & Privacy</h3>
+                  {[
+                    ["Store AI analysis results", "AI-generated analysis is saved to your dashboard", true],
+                    ["Anonymous usage analytics", "Help us improve CheckIn AI with anonymous usage data", true],
+                    ["Share aggregated insights", "Contribute anonymized data to improve AI recommendations", false],
+                  ].map(([title, desc, def]) => (
+                    <div key={title} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid #1e1e1e" }}>
+                      <div style={{ flex: 1, marginRight: 20 }}>
+                        <div style={{ color: "#ccc", fontSize: 14, fontWeight: 500, marginBottom: 4 }}>{title}</div>
+                        <div style={{ color: "#555", fontSize: 12 }}>{desc}</div>
+                      </div>
+                      <div style={{ width: 44, height: 24, background: def ? "#f5a623" : "#2a2a2a", borderRadius: 12, position: "relative", cursor: "pointer", flexShrink: 0 }}>
+                        <div style={{ width: 18, height: 18, background: "#fff", borderRadius: "50%", position: "absolute", top: 3, left: def ? 23 : 3, transition: "left .2s" }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
+                  <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 12px" }}>Client Data</h3>
+                  <p style={{ color: "#666", fontSize: 13, lineHeight: 1.7, margin: "0 0 16px" }}>
+                    All client check-in data is encrypted and stored securely. Only you as the coach can access your clients' data. We never sell or share personal data with third parties.
+                  </p>
+                  <p style={{ color: "#666", fontSize: 13, lineHeight: 1.7, margin: 0 }}>
+                    Clients can request deletion of their data at any time by contacting you directly.
+                  </p>
+                </div>
+
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28 }}>
+                  <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 12px" }}>Legal</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {["Privacy Policy", "Terms of Service", "Data Processing Agreement"].map(doc => (
+                      <button key={doc} style={{ textAlign: "left", background: "none", border: "none", color: "#f5a623", fontSize: 14, cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
+                        {doc} →
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Dashboard
   const pendingCheckins = checkins.filter(c => c.status === "pending");
   const approvedCheckins = checkins.filter(c => c.status === "approved");
@@ -484,8 +711,9 @@ export default function App() {
           <div style={{ width: 32, height: 32, background: accent, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
           <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>CheckIn AI</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ color: "#555", fontSize: 13 }}>{user.firstName || user.emailAddresses[0]?.emailAddress}</span>
+          <button onClick={() => setView("settings")} style={{ background: view === "settings" ? "#1e1e1e" : "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: view === "settings" ? "#fff" : "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>⚙ Settings</button>
           <button onClick={() => signOut()} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Sign out</button>
         </div>
       </div>
