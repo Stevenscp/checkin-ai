@@ -856,7 +856,7 @@ export default function App() {
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 8px" }}>Password & Security</h3>
                   <p style={{ color: "#555", fontSize: 13, margin: "0 0 16px" }}>Password and security settings are managed through your sign-in provider.</p>
-                  <button style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "10px 20px", color: "#ccc", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+                  <button onClick={() => setView("security")} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "10px 20px", color: "#ccc", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
                     Manage Security Settings →
                   </button>
                 </div>
