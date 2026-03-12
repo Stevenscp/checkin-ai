@@ -80,6 +80,9 @@ export default function App() {
   const [savedSettings, setSavedSettings] = useState(false);
   const [coachBio, setCoachBio] = useState("");
   const [coachTitle, setCoachTitle] = useState("");
+  const [helpMessages, setHelpMessages] = useState([{ role: "assistant", content: "Hi! I'm your CheckIn AI assistant 👋 I can help you navigate the app, troubleshoot issues, or answer questions about your account. What do you need help with?" }]);
+  const [helpInput, setHelpInput] = useState("");
+  const [helpLoading, setHelpLoading] = useState(false);
 
   async function handleUpgrade() {
     setUpgrading(true);
@@ -576,7 +579,7 @@ export default function App() {
           <P>CheckIn AI is a subscription-based software platform that enables fitness coaches to collect, review, and respond to client check-ins using AI-powered analysis. The service includes a coach dashboard, client check-in forms, AI-generated feedback, and subscription management tools.</P>
         </Section>
         <Section title="3. Subscriptions & Billing">
-          <P>CheckIn AI is offered on a monthly subscription basis at $99/month. A 7-day free trial is available for new accounts. After the trial period, your payment method will be charged automatically. You may cancel at any time through the Billing section of your settings.</P>
+          <P>CheckIn AI is offered on a monthly subscription basis at $19.99/month. A 7-day free trial is available for new accounts. After the trial period, your payment method will be charged automatically. You may cancel at any time through the Billing section of your settings.</P>
           <Ul>
             <Li>Subscriptions auto-renew monthly unless cancelled</Li>
             <Li>Refunds are handled on a case-by-case basis</Li>
@@ -745,8 +748,8 @@ export default function App() {
 
   // Settings page
   if (view === "settings") {
-    const tabs = ["general", "account", "billing", "privacy"];
-    const tabLabels = { general: "General", account: "Account", billing: "Billing", privacy: "Privacy" };
+    const tabs = ["general", "account", "billing", "privacy", "help"];
+    const tabLabels = { general: "General", account: "Account", billing: "Billing", privacy: "Privacy", help: "Help & Support" };
 
     return (
       <div style={{ background: "#0d0d0d", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
@@ -775,7 +778,7 @@ export default function App() {
             <p style={{ color: "#444", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, padding: "0 24px", marginBottom: 12 }}>Settings</p>
             {tabs.map(tab => (
               <button key={tab} className="settings-tab" onClick={() => setSettingsTab(tab)}
-                style={{ width: "100%", textAlign: "left", padding: "10px 24px", background: settingsTab === tab ? "#1a1a1a" : "none", border: "none", borderLeft: settingsTab === tab ? "2px solid #f5a623" : "2px solid transparent", color: settingsTab === tab ? "#fff" : "#666", cursor: "pointer", fontSize: 14, fontFamily: "inherit", transition: "all .15s" }}>
+                style={{ width: "100%", textAlign: "left", padding: "10px 24px", background: settingsTab === tab ? "#1a1a1a" : "none", border: "none", borderLeft: settingsTab === tab ? "2px solid #f5a623" : "2px solid transparent", color: settingsTab === tab ? "#fff" : "#666", cursor: "pointer", fontSize: 14, fontFamily: "inherit", transition: "all .15s" }}>{tab === "help" ? "💬 " : ""}
                 {tabLabels[tab]}
               </button>
             ))}
@@ -881,12 +884,12 @@ export default function App() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
                     <div>
                       <h3 style={{ color: "#f5a623", fontSize: 16, fontWeight: 700, margin: "0 0 4px" }}>CheckIn AI Pro</h3>
-                      <p style={{ color: "#666", fontSize: 13, margin: 0 }}>$99 / month · 7-day free trial</p>
+                      <p style={{ color: "#666", fontSize: 13, margin: 0 }}>$19.99 / month · 7-day free trial</p>
                     </div>
                     <span style={{ background: "#1e3a1e", color: "#4ade80", fontSize: 11, padding: "4px 12px", borderRadius: 20, fontWeight: 600 }}>Trial Active</span>
                   </div>
                   <div style={{ borderTop: "1px solid #2a2000", paddingTop: 20, marginBottom: 20 }}>
-                    {[["Plan", "CheckIn AI Pro"], ["Status", "Free Trial"], ["Billing cycle", "Monthly"], ["Amount", "$99/month after trial"]].map(([label, val]) => (
+                    {[["Plan", "CheckIn AI Pro"], ["Status", "Free Trial"], ["Billing cycle", "Monthly"], ["Amount", "$19.99/month after trial"]].map(([label, val]) => (
                       <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                         <span style={{ color: "#555", fontSize: 13 }}>{label}</span>
                         <span style={{ color: "#ccc", fontSize: 13 }}>{val}</span>
@@ -908,6 +911,136 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* HELP TAB */}
+
+            {/* HELP TAB */}
+            {settingsTab === "help" && (
+              <div>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Help & Support</h2>
+                <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Get instant help from our AI assistant or browse common topics.</p>
+
+                {/* Quick links */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 28 }}>
+                  {[
+                    ["🚀", "Getting Started", "Learn the basics of CheckIn AI"],
+                    ["👥", "Managing Clients", "Add, edit, and organise clients"],
+                    ["🤖", "AI Analysis", "How the AI reviews check-ins"],
+                    ["💳", "Billing & Plans", "Subscription and payment help"],
+                  ].map(([icon, title, desc]) => (
+                    <div key={title} onClick={() => setHelpInput(title)}
+                      style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px", cursor: "pointer" }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = "#f5a623"}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = "#2a2a2a"}>
+                      <div style={{ fontSize: 20, marginBottom: 6 }}>{icon}</div>
+                      <div style={{ color: "#fff", fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{title}</div>
+                      <div style={{ color: "#555", fontSize: 12 }}>{desc}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* AI Chat */}
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, overflow: "hidden" }}>
+                  <div style={{ padding: "16px 20px", borderBottom: "1px solid #1e1e1e", display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 28, height: 28, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>⚡</div>
+                    <div>
+                      <div style={{ color: "#fff", fontSize: 13, fontWeight: 600 }}>CheckIn AI Assistant</div>
+                      <div style={{ color: "#4ade80", fontSize: 11 }}>● Online</div>
+                    </div>
+                  </div>
+
+                  {/* Messages */}
+                  <div style={{ height: 340, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 14 }}
+                    ref={el => { if (el) el.scrollTop = el.scrollHeight; }}>
+                    {helpMessages.map((msg, i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                        <div style={{
+                          maxWidth: "80%", padding: "10px 14px", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+                          background: msg.role === "user" ? "#f5a623" : "#222",
+                          color: msg.role === "user" ? "#000" : "#ccc",
+                          fontSize: 13, lineHeight: 1.6
+                        }}>
+                          {msg.content}
+                        </div>
+                      </div>
+                    ))}
+                    {helpLoading && (
+                      <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                        <div style={{ background: "#222", borderRadius: "12px 12px 12px 2px", padding: "10px 16px", color: "#555", fontSize: 13 }}>Thinking...</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Input */}
+                  <div style={{ padding: "12px 16px", borderTop: "1px solid #1e1e1e", display: "flex", gap: 10 }}>
+                    <input
+                      value={helpInput}
+                      onChange={e => setHelpInput(e.target.value)}
+                      onKeyDown={async e => {
+                        if (e.key === "Enter" && helpInput.trim() && !helpLoading) {
+                          const userMsg = helpInput.trim();
+                          setHelpInput("");
+                          const newMessages = [...helpMessages, { role: "user", content: userMsg }];
+                          setHelpMessages(newMessages);
+                          setHelpLoading(true);
+                          try {
+                            const res = await fetch("/api/anthropic", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                model: "claude-sonnet-4-20250514",
+                                max_tokens: 1000,
+                                system: "You are a friendly support assistant for CheckIn AI, a SaaS platform for fitness coaches to manage client check-ins using AI. You help coaches with: navigating the dashboard, adding/managing clients, understanding AI analysis, billing and subscriptions ($19.99/month with 7-day trial), settings, and troubleshooting. Keep answers concise, friendly, and practical. If asked something outside the app, politely redirect.",
+                                messages: newMessages
+                              })
+                            });
+                            const data = await res.json();
+                            const reply = data.content?.[0]?.text || "Sorry, I couldn't get a response. Please try again.";
+                            setHelpMessages([...newMessages, { role: "assistant", content: reply }]);
+                          } catch {
+                            setHelpMessages([...newMessages, { role: "assistant", content: "Something went wrong. Please try again in a moment." }]);
+                          }
+                          setHelpLoading(false);
+                        }
+                      }}
+                      placeholder="Ask anything about CheckIn AI..."
+                      style={{ flex: 1, background: "#222", border: "1px solid #333", borderRadius: 8, padding: "10px 14px", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
+                    />
+                    <button
+                      onClick={async () => {
+                        if (!helpInput.trim() || helpLoading) return;
+                        const userMsg = helpInput.trim();
+                        setHelpInput("");
+                        const newMessages = [...helpMessages, { role: "user", content: userMsg }];
+                        setHelpMessages(newMessages);
+                        setHelpLoading(true);
+                        try {
+                          const res = await fetch("/api/anthropic", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              model: "claude-sonnet-4-20250514",
+                              max_tokens: 1000,
+                              system: "You are a friendly support assistant for CheckIn AI, a SaaS platform for fitness coaches to manage client check-ins using AI. You help coaches with: navigating the dashboard, adding/managing clients, understanding AI analysis, billing and subscriptions ($19.99/month with 7-day trial), settings, and troubleshooting. Keep answers concise, friendly, and practical. If asked something outside the app, politely redirect.",
+                              messages: newMessages
+                            })
+                          });
+                          const data = await res.json();
+                          const reply = data.content?.[0]?.text || "Sorry, I couldn't get a response. Please try again.";
+                          setHelpMessages([...newMessages, { role: "assistant", content: reply }]);
+                        } catch {
+                          setHelpMessages([...newMessages, { role: "assistant", content: "Something went wrong. Please try again in a moment." }]);
+                        }
+                        setHelpLoading(false);
+                      }}
+                      style={{ background: "#f5a623", border: "none", borderRadius: 8, padding: "10px 16px", color: "#000", fontWeight: 700, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+                      Send
+                    </button>
+                  </div>
+                </div>
+
               </div>
             )}
 
@@ -1000,7 +1133,7 @@ export default function App() {
             <div style={{ background: "linear-gradient(135deg, #1a1200, #1a0d00)", border: "1px solid #3a2800", borderRadius: 12, padding: "16px 24px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
               <div>
                 <span style={{ color: accent, fontWeight: 700, fontSize: 14 }}>🎉 7-day free trial active</span>
-                <span style={{ color: "#666", fontSize: 13, marginLeft: 12 }}>Upgrade anytime to keep full access at $99/month</span>
+                <span style={{ color: "#666", fontSize: 13, marginLeft: 12 }}>Upgrade anytime to keep full access at $19.99/month</span>
               </div>
               <button onClick={handleUpgrade} disabled={upgrading}
                 style={{ background: accent, color: "#000", border: "none", borderRadius: 8, padding: "10px 20px", fontWeight: 700, cursor: "pointer", fontSize: 13, fontFamily: "inherit", opacity: upgrading ? 0.7 : 1 }}>
