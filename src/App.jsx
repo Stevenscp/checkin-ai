@@ -111,6 +111,7 @@ export default function App() {
   const [showAddClient, setShowAddClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [newClientGoal, setNewClientGoal] = useState("Fat loss");
+  const [newClientEmail, setNewClientEmail] = useState("");
   const [clientForm, setClientForm] = useState({
     name: "", weight: "", lastWeight: "", sleep: 7, stress: 5,
     adherence: 100, energy: 7, hunger: 5, notes: "", challenge: "", goal: "Fat loss", week: 1
@@ -166,7 +167,27 @@ export default function App() {
     }).select().single();
     if (data) {
       setClients(prev => [data, ...prev]);
+      // Send welcome email if client email was provided
+      if (newClientEmail.trim()) {
+        try {
+          await fetch("/api/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "welcome-client",
+              data: {
+                clientEmail: newClientEmail.trim(),
+                clientName: newClientName.trim(),
+                coachName: user.firstName || "Your Coach",
+                coachEmail: user.emailAddresses?.[0]?.emailAddress || "",
+                checkinUrl: window.location.origin + "?checkin=true"
+              }
+            })
+          });
+        } catch(e) { console.error("Email error:", e); }
+      }
       setNewClientName("");
+      setNewClientEmail("");
       setNewClientGoal("Fat loss");
       setShowAddClient(false);
     }
@@ -214,6 +235,26 @@ export default function App() {
         submittedAt: "Just now"
       }, ...prev]);
       setFormSubmitted(true);
+      // Notify coach by email
+      try {
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "new-checkin",
+            data: {
+              coachEmail: user?.emailAddresses?.[0]?.emailAddress || "",
+              clientName: clientForm.name,
+              weight: clientForm.weight,
+              adherence: clientForm.adherence,
+              sleep: clientForm.sleep,
+              energy: clientForm.energy,
+              notes: clientForm.notes,
+              appUrl: window.location.origin
+            }
+          })
+        });
+      } catch(e) { console.error("Email error:", e); }
     }
   }
 
@@ -242,6 +283,26 @@ export default function App() {
       c.id === selectedCheckin.id ? { ...c, status: "approved", analysis: analysisText, coachNote } : c
     ));
     setApproved(true);
+    // Notify client by email if they have an email stored
+    if (selectedCheckin.clientEmail) {
+      try {
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "feedback-sent",
+            data: {
+              clientEmail: selectedCheckin.clientEmail,
+              coachName: user.firstName || "Your Coach",
+              coachEmail: user.emailAddresses?.[0]?.emailAddress || "",
+              coachNote,
+              analysis: analysisText,
+              appUrl: window.location.origin
+            }
+          })
+        });
+      } catch(e) { console.error("Email error:", e); }
+    }
   }
 
   const SliderInput = ({ label, value, onChange, min = 1, max = 10, color = "#f5a623" }) => (
@@ -1276,6 +1337,8 @@ export default function App() {
                   {showAddClient ? (
                     <div style={{ marginTop: 16, borderTop: "1px solid #1e1e1e", paddingTop: 16 }}>
                       <input placeholder="Client name" value={newClientName} onChange={e => setNewClientName(e.target.value)}
+                        style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, marginBottom: 8, fontFamily: "inherit" }} />
+                      <input placeholder="Client email (optional — sends welcome email)" value={newClientEmail} onChange={e => setNewClientEmail(e.target.value)}
                         style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, marginBottom: 8, fontFamily: "inherit" }} />
                       <select value={newClientGoal} onChange={e => setNewClientGoal(e.target.value)}
                         style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, marginBottom: 12, fontFamily: "inherit" }}>
