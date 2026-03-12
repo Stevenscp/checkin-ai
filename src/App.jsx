@@ -470,6 +470,279 @@ export default function App() {
   }
 
 
+
+  // ── Legal / Security sub-pages ──────────────────────────────────────────
+
+  const legalViews = ["privacy-policy", "terms", "dpa", "security"];
+
+  if (legalViews.includes(view)) {
+
+    const backTo = ["privacy-policy","terms","dpa"].includes(view) ? "settings" : "settings";
+
+    // ── Shared shell ────────────────────────────────────────────────────────
+    const Shell = ({ title, subtitle, children }) => (
+      <div style={{ background: "#0d0d0d", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap'); * { box-sizing: border-box; }`}</style>
+        <div style={{ borderBottom: "1px solid #1e1e1e", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => setView("dashboard")}>
+            <div style={{ width: 32, height: 32, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
+            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>CheckIn AI</span>
+          </div>
+          <button onClick={() => { setView("settings"); setSettingsTab(["privacy-policy","terms","dpa"].includes(view) ? "privacy" : "account"); }}
+            style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Back to Settings</button>
+        </div>
+        <div style={{ maxWidth: 780, margin: "0 auto", padding: "60px 40px" }}>
+          <div style={{ marginBottom: 48 }}>
+            <h1 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 38, margin: "0 0 10px" }}>{title}</h1>
+            <p style={{ color: "#555", fontSize: 14, margin: 0 }}>{subtitle}</p>
+          </div>
+          {children}
+        </div>
+      </div>
+    );
+
+    const Section = ({ title, children }) => (
+      <div style={{ marginBottom: 40 }}>
+        <h2 style={{ color: "#f5a623", fontSize: 13, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px", fontWeight: 700 }}>{title}</h2>
+        <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28 }}>
+          {children}
+        </div>
+      </div>
+    );
+
+    const P = ({ children }) => <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: "0 0 14px" }}>{children}</p>;
+    const Li = ({ children }) => <li style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, marginBottom: 8 }}>{children}</li>;
+    const Ul = ({ children }) => <ul style={{ paddingLeft: 20, margin: "0 0 14px" }}>{children}</ul>;
+    const lastUpdated = "March 1, 2026";
+
+    // ── PRIVACY POLICY ──────────────────────────────────────────────────────
+    if (view === "privacy-policy") return (
+      <Shell title="Privacy Policy" subtitle={`Last updated: ${lastUpdated}`}>
+        <Section title="1. Introduction">
+          <P>CheckIn AI ("we", "our", or "us") is committed to protecting the privacy of coaches and their clients who use our platform. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.</P>
+          <P>By using CheckIn AI, you agree to the collection and use of information in accordance with this policy.</P>
+        </Section>
+        <Section title="2. Information We Collect">
+          <P>We collect information you provide directly to us, including:</P>
+          <Ul>
+            <Li>Account information such as your name, email address, and password</Li>
+            <Li>Coach profile information including your title and bio</Li>
+            <Li>Client data you enter into the platform, including check-in responses and progress metrics</Li>
+            <Li>Payment information processed securely through Stripe</Li>
+          </Ul>
+          <P>We also automatically collect certain information when you use our service, including usage data, device information, and cookies.</P>
+        </Section>
+        <Section title="3. How We Use Your Information">
+          <P>We use the information we collect to:</P>
+          <Ul>
+            <Li>Provide, maintain, and improve our services</Li>
+            <Li>Process transactions and send related information</Li>
+            <Li>Generate AI-powered analysis of client check-ins</Li>
+            <Li>Send notifications and updates relevant to your account</Li>
+            <Li>Respond to your comments and questions</Li>
+            <Li>Monitor and analyze usage patterns to improve user experience</Li>
+          </Ul>
+        </Section>
+        <Section title="4. Data Sharing & Disclosure">
+          <P>We do not sell, trade, or rent your personal information to third parties. We may share your information only in the following circumstances:</P>
+          <Ul>
+            <Li>With service providers who assist in our operations (Supabase for database, Anthropic for AI, Stripe for payments, Clerk for authentication)</Li>
+            <Li>When required by law or to protect our legal rights</Li>
+            <Li>In connection with a merger, acquisition, or sale of assets</Li>
+          </Ul>
+        </Section>
+        <Section title="5. Data Retention">
+          <P>We retain your personal data for as long as your account is active or as needed to provide services. You may request deletion of your data at any time by contacting us. Client check-in data is retained until you delete it from your dashboard or close your account.</P>
+        </Section>
+        <Section title="6. Security">
+          <P>We implement industry-standard security measures to protect your data, including encryption in transit and at rest, row-level security in our database, and secure authentication via Clerk. However, no method of transmission over the internet is 100% secure.</P>
+        </Section>
+        <Section title="7. Your Rights">
+          <P>You have the right to access, correct, or delete your personal data at any time. You may also object to or restrict certain processing of your data. To exercise these rights, contact us through the Help section of the app.</P>
+        </Section>
+        <Section title="8. Contact Us">
+          <P>If you have questions about this Privacy Policy, please contact us through the Help section in your dashboard settings.</P>
+        </Section>
+      </Shell>
+    );
+
+    // ── TERMS OF SERVICE ────────────────────────────────────────────────────
+    if (view === "terms") return (
+      <Shell title="Terms of Service" subtitle={`Last updated: ${lastUpdated}`}>
+        <Section title="1. Acceptance of Terms">
+          <P>By accessing or using CheckIn AI, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service. These terms apply to all coaches, users, and others who access the service.</P>
+        </Section>
+        <Section title="2. Description of Service">
+          <P>CheckIn AI is a subscription-based software platform that enables fitness coaches to collect, review, and respond to client check-ins using AI-powered analysis. The service includes a coach dashboard, client check-in forms, AI-generated feedback, and subscription management tools.</P>
+        </Section>
+        <Section title="3. Subscriptions & Billing">
+          <P>CheckIn AI is offered on a monthly subscription basis at $99/month. A 7-day free trial is available for new accounts. After the trial period, your payment method will be charged automatically. You may cancel at any time through the Billing section of your settings.</P>
+          <Ul>
+            <Li>Subscriptions auto-renew monthly unless cancelled</Li>
+            <Li>Refunds are handled on a case-by-case basis</Li>
+            <Li>Price changes will be communicated with at least 30 days notice</Li>
+          </Ul>
+        </Section>
+        <Section title="4. Acceptable Use">
+          <P>You agree to use CheckIn AI only for lawful purposes and in accordance with these terms. You may not:</P>
+          <Ul>
+            <Li>Use the service to collect data without client consent</Li>
+            <Li>Attempt to gain unauthorized access to our systems</Li>
+            <Li>Resell or sublicense access to the platform</Li>
+            <Li>Use the AI features to provide medical diagnoses or replace licensed medical advice</Li>
+            <Li>Upload content that is illegal, harmful, or violates third-party rights</Li>
+          </Ul>
+        </Section>
+        <Section title="5. AI-Generated Content">
+          <P>CheckIn AI uses artificial intelligence to generate coaching suggestions and analysis. This content is intended to assist coaches, not replace professional judgment. You are solely responsible for reviewing AI-generated content before sharing it with clients. CheckIn AI is not liable for decisions made based on AI outputs.</P>
+        </Section>
+        <Section title="6. Client Data Responsibility">
+          <P>As a coach using our platform, you are responsible for obtaining appropriate consent from your clients to collect and process their data. You agree to handle client data in compliance with applicable privacy laws in your jurisdiction.</P>
+        </Section>
+        <Section title="7. Intellectual Property">
+          <P>The CheckIn AI platform, including its design, code, and content, is owned by us and protected by intellectual property laws. You retain ownership of all data you input into the platform. We do not claim ownership of your client data or coaching content.</P>
+        </Section>
+        <Section title="8. Termination">
+          <P>We reserve the right to suspend or terminate your account for violations of these terms. You may cancel your account at any time. Upon termination, your data will be retained for 30 days before permanent deletion, giving you time to export your information.</P>
+        </Section>
+        <Section title="9. Limitation of Liability">
+          <P>To the maximum extent permitted by law, CheckIn AI shall not be liable for any indirect, incidental, or consequential damages arising from your use of the service. Our total liability shall not exceed the amount you paid us in the 3 months preceding the claim.</P>
+        </Section>
+        <Section title="10. Contact">
+          <P>For questions about these Terms of Service, contact us through the Help section in your dashboard.</P>
+        </Section>
+      </Shell>
+    );
+
+    // ── DATA PROCESSING AGREEMENT ───────────────────────────────────────────
+    if (view === "dpa") return (
+      <Shell title="Data Processing Agreement" subtitle={`Last updated: ${lastUpdated}`}>
+        <Section title="1. Purpose & Scope">
+          <P>This Data Processing Agreement ("DPA") forms part of the agreement between CheckIn AI ("Processor") and the coach using our platform ("Controller"). It governs the processing of personal data of clients submitted through the CheckIn AI platform in accordance with applicable data protection laws.</P>
+        </Section>
+        <Section title="2. Definitions">
+          <Ul>
+            <Li><strong style={{color:"#fff"}}>Personal Data:</strong> Any information relating to an identified or identifiable natural person (your clients)</Li>
+            <Li><strong style={{color:"#fff"}}>Processing:</strong> Any operation performed on personal data, including collection, storage, and analysis</Li>
+            <Li><strong style={{color:"#fff"}}>Controller:</strong> The coach who determines the purpose and means of processing client data</Li>
+            <Li><strong style={{color:"#fff"}}>Processor:</strong> CheckIn AI, which processes data on behalf of the Controller</Li>
+          </Ul>
+        </Section>
+        <Section title="3. Data Processing Details">
+          <P>CheckIn AI processes the following categories of client data on your behalf:</P>
+          <Ul>
+            <Li>Body metrics (weight, measurements)</Li>
+            <Li>Lifestyle data (sleep, stress, energy, hunger levels)</Li>
+            <Li>Dietary adherence information</Li>
+            <Li>Coach and client notes</Li>
+            <Li>AI-generated analysis and feedback</Li>
+          </Ul>
+        </Section>
+        <Section title="4. Processor Obligations">
+          <P>CheckIn AI agrees to:</P>
+          <Ul>
+            <Li>Process personal data only on documented instructions from the Controller</Li>
+            <Li>Ensure persons authorized to process data are bound by confidentiality</Li>
+            <Li>Implement appropriate technical and organizational security measures</Li>
+            <Li>Not engage sub-processors without prior authorization</Li>
+            <Li>Assist the Controller in fulfilling data subject rights requests</Li>
+            <Li>Delete or return all personal data upon termination of services</Li>
+          </Ul>
+        </Section>
+        <Section title="5. Sub-Processors">
+          <P>CheckIn AI uses the following authorized sub-processors:</P>
+          <Ul>
+            <Li><strong style={{color:"#fff"}}>Supabase</strong> — Database storage (United States)</Li>
+            <Li><strong style={{color:"#fff"}}>Anthropic</strong> — AI analysis processing (United States)</Li>
+            <Li><strong style={{color:"#fff"}}>Vercel</strong> — Application hosting (United States)</Li>
+            <Li><strong style={{color:"#fff"}}>Clerk</strong> — Authentication services (United States)</Li>
+            <Li><strong style={{color:"#fff"}}>Stripe</strong> — Payment processing (United States)</Li>
+          </Ul>
+        </Section>
+        <Section title="6. Security Measures">
+          <P>We maintain the following technical and organizational security measures:</P>
+          <Ul>
+            <Li>Encryption of data in transit using TLS 1.2+</Li>
+            <Li>Encryption of data at rest in our database</Li>
+            <Li>Row-level security policies to prevent unauthorized data access</Li>
+            <Li>Multi-factor authentication options for coach accounts</Li>
+            <Li>Regular security reviews and dependency updates</Li>
+          </Ul>
+        </Section>
+        <Section title="7. Data Transfers">
+          <P>Your client data is stored and processed in the United States. By using CheckIn AI, you acknowledge that data may be transferred to and processed in the US, which may have different data protection laws than your country.</P>
+        </Section>
+        <Section title="8. Term & Termination">
+          <P>This DPA remains in effect for the duration of your CheckIn AI subscription. Upon termination, we will delete all personal data within 30 days unless retention is required by law.</P>
+        </Section>
+      </Shell>
+    );
+
+    // ── SECURITY SETTINGS ───────────────────────────────────────────────────
+    if (view === "security") return (
+      <Shell title="Security Settings" subtitle="Manage your account security and authentication preferences.">
+        <Section title="Authentication">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid #222" }}>
+            <div>
+              <div style={{ color: "#fff", fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Email Address</div>
+              <div style={{ color: "#555", fontSize: 13 }}>{user.emailAddresses[0]?.emailAddress}</div>
+            </div>
+            <span style={{ background: "#1e3a1e", color: "#4ade80", fontSize: 11, padding: "4px 12px", borderRadius: 20, fontWeight: 600 }}>Verified</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid #222" }}>
+            <div>
+              <div style={{ color: "#fff", fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Password</div>
+              <div style={{ color: "#555", fontSize: 13 }}>Last changed: unknown</div>
+            </div>
+            <button style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "8px 16px", color: "#ccc", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Change Password</button>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ color: "#fff", fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Two-Factor Authentication</div>
+              <div style={{ color: "#555", fontSize: 13 }}>Add an extra layer of security to your account</div>
+            </div>
+            <button style={{ background: "#f5a623", border: "none", borderRadius: 8, padding: "8px 16px", color: "#000", cursor: "pointer", fontSize: 12, fontFamily: "inherit", fontWeight: 700 }}>Enable 2FA</button>
+          </div>
+        </Section>
+
+        <Section title="Connected Accounts">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>G</div>
+              <div>
+                <div style={{ color: "#fff", fontSize: 14, fontWeight: 500 }}>Google</div>
+                <div style={{ color: "#555", fontSize: 12 }}>Sign in with Google</div>
+              </div>
+            </div>
+            <span style={{ color: "#555", fontSize: 12 }}>
+              {user.externalAccounts?.length > 0 ? <span style={{ color: "#4ade80" }}>Connected</span> : "Not connected"}
+            </span>
+          </div>
+        </Section>
+
+        <Section title="Active Sessions">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div>
+              <div style={{ color: "#fff", fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Current Session</div>
+              <div style={{ color: "#555", fontSize: 12 }}>This device · Active now</div>
+            </div>
+            <span style={{ background: "#1e3a1e", color: "#4ade80", fontSize: 11, padding: "4px 12px", borderRadius: 20 }}>Current</span>
+          </div>
+          <button style={{ background: "none", border: "1px solid #f87171", borderRadius: 8, padding: "10px 20px", color: "#f87171", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+            Sign Out All Other Sessions
+          </button>
+        </Section>
+
+        <Section title="Account Actions">
+          <P>Need to make changes to your email or connected accounts? These are managed through your authentication provider.</P>
+          <button onClick={() => signOut()} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "10px 20px", color: "#ccc", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+            Sign Out →
+          </button>
+        </Section>
+      </Shell>
+    );
+  }
+
   // Settings page
   if (view === "settings") {
     const tabs = ["general", "account", "billing", "privacy"];
@@ -676,8 +949,8 @@ export default function App() {
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28 }}>
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 12px" }}>Legal</h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {["Privacy Policy", "Terms of Service", "Data Processing Agreement"].map(doc => (
-                      <button key={doc} style={{ textAlign: "left", background: "none", border: "none", color: "#f5a623", fontSize: 14, cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
+                    {[["Privacy Policy","privacy-policy"], ["Terms of Service","terms"], ["Data Processing Agreement","dpa"]].map(([doc, slug]) => (
+                      <button key={doc} onClick={() => setView(slug)} style={{ textAlign: "left", background: "none", border: "none", color: "#f5a623", fontSize: 14, cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
                         {doc} →
                       </button>
                     ))}
