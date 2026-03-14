@@ -163,7 +163,9 @@ export default function App() {
     const { data } = await supabase.from("clients").insert({
       coach_id: user.id,
       name: newClientName.trim(),
-      goal: newClientGoal
+      goal: newClientGoal,
+      email: newClientEmail.trim() || null,
+      coach_email: user.emailAddresses?.[0]?.emailAddress || null
     }).select().single();
     if (data) {
       setClients(prev => [data, ...prev]);
@@ -180,7 +182,7 @@ export default function App() {
                 clientName: newClientName.trim(),
                 coachName: user.firstName || "Your Coach",
                 coachEmail: user.emailAddresses?.[0]?.emailAddress || "",
-                checkinUrl: window.location.origin + "?checkin=true"
+                checkinUrl: "https://akeemaai.com?checkin=true"
               }
             })
           });
@@ -235,25 +237,29 @@ export default function App() {
         submittedAt: "Just now"
       }, ...prev]);
       setFormSubmitted(true);
-      // Notify coach by email
+      // Notify coach by email - fetch coach_email from client record
       try {
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "new-checkin",
-            data: {
-              coachEmail: user?.emailAddresses?.[0]?.emailAddress || "",
-              clientName: clientForm.name,
-              weight: clientForm.weight,
-              adherence: clientForm.adherence,
-              sleep: clientForm.sleep,
-              energy: clientForm.energy,
-              notes: clientForm.notes,
-              appUrl: window.location.origin
-            }
-          })
-        });
+        const clientRecord = await supabase.from("clients").select("coach_email, email").eq("id", clientId).single();
+        const coachEmail = clientRecord?.data?.coach_email || "";
+        if (coachEmail) {
+          await fetch("/api/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "new-checkin",
+              data: {
+                coachEmail,
+                clientName: clientForm.name,
+                weight: clientForm.weight,
+                adherence: clientForm.adherence,
+                sleep: clientForm.sleep,
+                energy: clientForm.energy,
+                notes: clientForm.notes,
+                appUrl: "https://akeemaai.com"
+              }
+            })
+          });
+        }
       } catch(e) { console.error("Email error:", e); }
     }
   }
@@ -283,26 +289,28 @@ export default function App() {
       c.id === selectedCheckin.id ? { ...c, status: "approved", analysis: analysisText, coachNote } : c
     ));
     setApproved(true);
-    // Notify client by email if they have an email stored
-    if (selectedCheckin.clientEmail) {
-      try {
+    // Notify client by email - fetch from Supabase
+    try {
+      const clientRecord = await supabase.from("clients").select("email").eq("id", selectedCheckin.client_id).single();
+      const clientEmail = clientRecord?.data?.email || "";
+      if (clientEmail) {
         await fetch("/api/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "feedback-sent",
             data: {
-              clientEmail: selectedCheckin.clientEmail,
+              clientEmail,
               coachName: user.firstName || "Your Coach",
               coachEmail: user.emailAddresses?.[0]?.emailAddress || "",
               coachNote,
               analysis: analysisText,
-              appUrl: window.location.origin
+              appUrl: "https://akeemaai.com"
             }
           })
         });
-      } catch(e) { console.error("Email error:", e); }
-    }
+      }
+    } catch(e) { console.error("Email error:", e); }
   }
 
   const SliderInput = ({ label, value, onChange, min = 1, max = 10, color = "#f5a623" }) => (
