@@ -180,7 +180,7 @@ export default function App() {
                 clientName: newClientName.trim(),
                 coachName: user.firstName || "Your Coach",
                 coachEmail: user.emailAddresses?.[0]?.emailAddress || "",
-                checkinUrl: "https://akeemaai.com?checkin=true"
+                checkinUrl: window.location.origin + "?checkin=true"
               }
             })
           });
