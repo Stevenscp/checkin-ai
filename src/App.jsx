@@ -80,7 +80,7 @@ export default function App() {
   const [savedSettings, setSavedSettings] = useState(false);
   const [coachBio, setCoachBio] = useState("");
   const [coachTitle, setCoachTitle] = useState("");
-  const [helpMessages, setHelpMessages] = useState([{ role: "assistant", content: "Hi! I'm your Akeema assistant 👋 I can help you navigate the app, troubleshoot issues, or answer questions about your account. What do you need help with?" }]);
+  const [helpMessages, setHelpMessages] = useState([{ role: "assistant", content: "Hi! I'm your CheckIn AI assistant 👋 I can help you navigate the app, troubleshoot issues, or answer questions about your account. What do you need help with?" }]);
   const [helpInput, setHelpInput] = useState("");
   const [helpLoading, setHelpLoading] = useState(false);
 
@@ -326,6 +326,106 @@ export default function App() {
     );
   }
 
+  // Allow clients to access check-in form without signing in
+  const isCheckinUrl = new URLSearchParams(window.location.search).get("checkin") === "true";
+  if (!isLoaded) return null;
+  if (!isSignedIn && isCheckinUrl) {
+    // Render the check-in form inline for public clients
+    return (
+      <div style={{ background: "#0d0d0d", minHeight: "100vh", padding: "40px 20px", fontFamily: "'DM Sans', sans-serif" }}>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap');
+          * { box-sizing: border-box; }
+          input[type=range] { accent-color: #f5a623; }
+        `}</style>
+        <div style={{ maxWidth: 560, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 40 }}>
+            <div style={{ width: 32, height: 32, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
+            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
+          </div>
+          {formSubmitted ? (
+            <div style={{ textAlign: "center", padding: "60px 0" }}>
+              <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
+              <h2 style={{ color: "#fff", fontFamily: "'DM Serif Display'", fontSize: 28, margin: "0 0 12px" }}>Check-in submitted!</h2>
+              <p style={{ color: "#555", fontSize: 15 }}>Your coach will review and respond shortly.</p>
+            </div>
+          ) : (
+            <>
+              <div style={{ marginBottom: 32 }}>
+                <h1 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 32, margin: "0 0 6px" }}>Weekly Check-in</h1>
+                <p style={{ color: "#666", fontSize: 14, margin: 0 }}>Be honest — your coach uses this to help you.</p>
+              </div>
+              <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 16 }}>
+                <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Your Info</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                  {[["Name", "name", "text"], ["Goal", "goal", "text"], ["Week #", "week", "number"]].map(([lbl, key, type]) => (
+                    <div key={key} style={key === "name" ? { gridColumn: "1/-1" } : {}}>
+                      <label style={{ display: "block", fontSize: 11, color: "#666", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>{lbl}</label>
+                      <input type={type} value={clientForm[key]} onChange={e => setClientForm(p => ({ ...p, [key]: e.target.value }))}
+                        style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "10px 14px", color: "#fff", fontSize: 14, fontFamily: "inherit" }} />
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  {[["Current Weight (lbs)", "weight"], ["Last Week Weight (lbs)", "lastWeight"]].map(([lbl, key]) => (
+                    <div key={key}>
+                      <label style={{ display: "block", fontSize: 11, color: "#666", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>{lbl}</label>
+                      <input type="number" value={clientForm[key]} onChange={e => setClientForm(p => ({ ...p, [key]: e.target.value }))}
+                        style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "10px 14px", color: "#fff", fontSize: 14, fontFamily: "inherit" }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 16 }}>
+                <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 24px" }}>Rate Your Week</h3>
+                <SliderInput label="Sleep Quality" value={clientForm.sleep} onChange={v => setClientForm(p => ({ ...p, sleep: v }))} color="#818cf8" />
+                <SliderInput label="Stress Level" value={clientForm.stress} onChange={v => setClientForm(p => ({ ...p, stress: v }))} color="#f87171" />
+                <SliderInput label="Energy Levels" value={clientForm.energy} onChange={v => setClientForm(p => ({ ...p, energy: v }))} color="#4ade80" />
+                <SliderInput label="Hunger Levels" value={clientForm.hunger} onChange={v => setClientForm(p => ({ ...p, hunger: v }))} color="#fb923c" />
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                    <label style={{ fontSize: 12, color: "#999", textTransform: "uppercase", letterSpacing: 1 }}>Training Adherence</label>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#f5a623" }}>{clientForm.adherence}%</span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+                    {[0, 25, 50, 75, 100].map(val => (
+                      <button key={val} type="button" onClick={() => setClientForm(p => ({ ...p, adherence: val }))}
+                        style={{ padding: "10px 0", borderRadius: 8, border: `1px solid ${clientForm.adherence === val ? "#f5a623" : "#333"}`, background: clientForm.adherence === val ? "#1e1200" : "#1a1a1a", color: clientForm.adherence === val ? "#f5a623" : "#666", fontWeight: clientForm.adherence === val ? 700 : 400, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+                        {val}%
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 8 }}>
+                    {[10, 33, 60, 90].map(val => (
+                      <button key={val} type="button" onClick={() => setClientForm(p => ({ ...p, adherence: val }))}
+                        style={{ padding: "8px 0", borderRadius: 8, border: `1px solid ${clientForm.adherence === val ? "#f5a623" : "#2a2a2a"}`, background: clientForm.adherence === val ? "#1e1200" : "transparent", color: clientForm.adherence === val ? "#f5a623" : "#555", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                        {val}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 24 }}>
+                <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>In Your Own Words</h3>
+                {[["How did the week go?", "notes", "Give your coach context..."], ["Biggest challenge this week?", "challenge", "What got in the way?"]].map(([lbl, key, ph]) => (
+                  <div key={key} style={{ marginBottom: 20 }}>
+                    <label style={{ display: "block", fontSize: 12, color: "#999", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>{lbl}</label>
+                    <textarea rows={3} placeholder={ph} value={clientForm[key]} onChange={e => setClientForm(p => ({ ...p, [key]: e.target.value }))}
+                      style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "12px 14px", color: "#fff", fontSize: 14, resize: "vertical", fontFamily: "inherit" }} />
+                  </div>
+                ))}
+              </div>
+              <button onClick={handleClientSubmit}
+                style={{ width: "100%", background: "#f5a623", color: "#000", border: "none", borderRadius: 10, padding: "16px", fontWeight: 700, cursor: "pointer", fontSize: 16, fontFamily: "inherit" }}>
+                Submit Check-in →
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // Sign in page
   if (!isSignedIn) {
     return (
@@ -550,7 +650,7 @@ export default function App() {
         <div style={{ borderBottom: "1px solid #1e1e1e", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => setView("dashboard")}>
             <div style={{ width: 32, height: 32, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
-            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
+            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>CheckIn AI</span>
           </div>
           <button onClick={() => { setView("settings"); setSettingsTab(["privacy-policy","terms","dpa"].includes(view) ? "privacy" : "account"); }}
             style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Back to Settings</button>
@@ -583,8 +683,8 @@ export default function App() {
     if (view === "privacy-policy") return (
       <Shell title="Privacy Policy" subtitle={`Last updated: ${lastUpdated}`}>
         <Section title="1. Introduction">
-          <P>Akeema ("we", "our", or "us") is committed to protecting the privacy of coaches and their clients who use our platform. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.</P>
-          <P>By using Akeema, you agree to the collection and use of information in accordance with this policy.</P>
+          <P>CheckIn AI ("we", "our", or "us") is committed to protecting the privacy of coaches and their clients who use our platform. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.</P>
+          <P>By using CheckIn AI, you agree to the collection and use of information in accordance with this policy.</P>
         </Section>
         <Section title="2. Information We Collect">
           <P>We collect information you provide directly to us, including:</P>
@@ -634,13 +734,13 @@ export default function App() {
     if (view === "terms") return (
       <Shell title="Terms of Service" subtitle={`Last updated: ${lastUpdated}`}>
         <Section title="1. Acceptance of Terms">
-          <P>By accessing or using Akeema, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service. These terms apply to all coaches, users, and others who access the service.</P>
+          <P>By accessing or using CheckIn AI, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service. These terms apply to all coaches, users, and others who access the service.</P>
         </Section>
         <Section title="2. Description of Service">
-          <P>Akeema is a subscription-based software platform that enables fitness coaches to collect, review, and respond to client check-ins using AI-powered analysis. The service includes a coach dashboard, client check-in forms, AI-generated feedback, and subscription management tools.</P>
+          <P>CheckIn AI is a subscription-based software platform that enables fitness coaches to collect, review, and respond to client check-ins using AI-powered analysis. The service includes a coach dashboard, client check-in forms, AI-generated feedback, and subscription management tools.</P>
         </Section>
         <Section title="3. Subscriptions & Billing">
-          <P>Akeema is offered on a monthly subscription basis at $19.99/month. A 7-day free trial is available for new accounts. After the trial period, your payment method will be charged automatically. You may cancel at any time through the Billing section of your settings.</P>
+          <P>CheckIn AI is offered on a monthly subscription basis at $19.99/month. A 7-day free trial is available for new accounts. After the trial period, your payment method will be charged automatically. You may cancel at any time through the Billing section of your settings.</P>
           <Ul>
             <Li>Subscriptions auto-renew monthly unless cancelled</Li>
             <Li>Refunds are handled on a case-by-case basis</Li>
@@ -648,7 +748,7 @@ export default function App() {
           </Ul>
         </Section>
         <Section title="4. Acceptable Use">
-          <P>You agree to use Akeema only for lawful purposes and in accordance with these terms. You may not:</P>
+          <P>You agree to use CheckIn AI only for lawful purposes and in accordance with these terms. You may not:</P>
           <Ul>
             <Li>Use the service to collect data without client consent</Li>
             <Li>Attempt to gain unauthorized access to our systems</Li>
@@ -658,19 +758,19 @@ export default function App() {
           </Ul>
         </Section>
         <Section title="5. AI-Generated Content">
-          <P>Akeema uses artificial intelligence to generate coaching suggestions and analysis. This content is intended to assist coaches, not replace professional judgment. You are solely responsible for reviewing AI-generated content before sharing it with clients. Akeema is not liable for decisions made based on AI outputs.</P>
+          <P>CheckIn AI uses artificial intelligence to generate coaching suggestions and analysis. This content is intended to assist coaches, not replace professional judgment. You are solely responsible for reviewing AI-generated content before sharing it with clients. CheckIn AI is not liable for decisions made based on AI outputs.</P>
         </Section>
         <Section title="6. Client Data Responsibility">
           <P>As a coach using our platform, you are responsible for obtaining appropriate consent from your clients to collect and process their data. You agree to handle client data in compliance with applicable privacy laws in your jurisdiction.</P>
         </Section>
         <Section title="7. Intellectual Property">
-          <P>The Akeema platform, including its design, code, and content, is owned by us and protected by intellectual property laws. You retain ownership of all data you input into the platform. We do not claim ownership of your client data or coaching content.</P>
+          <P>The CheckIn AI platform, including its design, code, and content, is owned by us and protected by intellectual property laws. You retain ownership of all data you input into the platform. We do not claim ownership of your client data or coaching content.</P>
         </Section>
         <Section title="8. Termination">
           <P>We reserve the right to suspend or terminate your account for violations of these terms. You may cancel your account at any time. Upon termination, your data will be retained for 30 days before permanent deletion, giving you time to export your information.</P>
         </Section>
         <Section title="9. Limitation of Liability">
-          <P>To the maximum extent permitted by law, Akeema shall not be liable for any indirect, incidental, or consequential damages arising from your use of the service. Our total liability shall not exceed the amount you paid us in the 3 months preceding the claim.</P>
+          <P>To the maximum extent permitted by law, CheckIn AI shall not be liable for any indirect, incidental, or consequential damages arising from your use of the service. Our total liability shall not exceed the amount you paid us in the 3 months preceding the claim.</P>
         </Section>
         <Section title="10. Contact">
           <P>For questions about these Terms of Service, contact us through the Help section in your dashboard.</P>
@@ -682,18 +782,18 @@ export default function App() {
     if (view === "dpa") return (
       <Shell title="Data Processing Agreement" subtitle={`Last updated: ${lastUpdated}`}>
         <Section title="1. Purpose & Scope">
-          <P>This Data Processing Agreement ("DPA") forms part of the agreement between Akeema ("Processor") and the coach using our platform ("Controller"). It governs the processing of personal data of clients submitted through the Akeema platform in accordance with applicable data protection laws.</P>
+          <P>This Data Processing Agreement ("DPA") forms part of the agreement between CheckIn AI ("Processor") and the coach using our platform ("Controller"). It governs the processing of personal data of clients submitted through the CheckIn AI platform in accordance with applicable data protection laws.</P>
         </Section>
         <Section title="2. Definitions">
           <Ul>
             <Li><strong style={{color:"#fff"}}>Personal Data:</strong> Any information relating to an identified or identifiable natural person (your clients)</Li>
             <Li><strong style={{color:"#fff"}}>Processing:</strong> Any operation performed on personal data, including collection, storage, and analysis</Li>
             <Li><strong style={{color:"#fff"}}>Controller:</strong> The coach who determines the purpose and means of processing client data</Li>
-            <Li><strong style={{color:"#fff"}}>Processor:</strong> Akeema, which processes data on behalf of the Controller</Li>
+            <Li><strong style={{color:"#fff"}}>Processor:</strong> CheckIn AI, which processes data on behalf of the Controller</Li>
           </Ul>
         </Section>
         <Section title="3. Data Processing Details">
-          <P>Akeema processes the following categories of client data on your behalf:</P>
+          <P>CheckIn AI processes the following categories of client data on your behalf:</P>
           <Ul>
             <Li>Body metrics (weight, measurements)</Li>
             <Li>Lifestyle data (sleep, stress, energy, hunger levels)</Li>
@@ -703,7 +803,7 @@ export default function App() {
           </Ul>
         </Section>
         <Section title="4. Processor Obligations">
-          <P>Akeema agrees to:</P>
+          <P>CheckIn AI agrees to:</P>
           <Ul>
             <Li>Process personal data only on documented instructions from the Controller</Li>
             <Li>Ensure persons authorized to process data are bound by confidentiality</Li>
@@ -714,7 +814,7 @@ export default function App() {
           </Ul>
         </Section>
         <Section title="5. Sub-Processors">
-          <P>Akeema uses the following authorized sub-processors:</P>
+          <P>CheckIn AI uses the following authorized sub-processors:</P>
           <Ul>
             <Li><strong style={{color:"#fff"}}>Supabase</strong> — Database storage (United States)</Li>
             <Li><strong style={{color:"#fff"}}>Anthropic</strong> — AI analysis processing (United States)</Li>
@@ -734,10 +834,10 @@ export default function App() {
           </Ul>
         </Section>
         <Section title="7. Data Transfers">
-          <P>Your client data is stored and processed in the United States. By using Akeema, you acknowledge that data may be transferred to and processed in the US, which may have different data protection laws than your country.</P>
+          <P>Your client data is stored and processed in the United States. By using CheckIn AI, you acknowledge that data may be transferred to and processed in the US, which may have different data protection laws than your country.</P>
         </Section>
         <Section title="8. Term & Termination">
-          <P>This DPA remains in effect for the duration of your Akeema subscription. Upon termination, we will delete all personal data within 30 days unless retention is required by law.</P>
+          <P>This DPA remains in effect for the duration of your CheckIn AI subscription. Upon termination, we will delete all personal data within 30 days unless retention is required by law.</P>
         </Section>
       </Shell>
     );
@@ -825,7 +925,7 @@ export default function App() {
         <div style={{ borderBottom: "1px solid #1e1e1e", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => setView("dashboard")}>
             <div style={{ width: 32, height: 32, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
-            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
+            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>CheckIn AI</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <button onClick={() => setView("dashboard")} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Dashboard</button>
@@ -944,13 +1044,13 @@ export default function App() {
                 <div style={{ background: "linear-gradient(135deg, #1a1200, #161616)", border: "1px solid #3a2800", borderRadius: 12, padding: 28, marginBottom: 20 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
                     <div>
-                      <h3 style={{ color: "#f5a623", fontSize: 16, fontWeight: 700, margin: "0 0 4px" }}>Akeema Pro</h3>
+                      <h3 style={{ color: "#f5a623", fontSize: 16, fontWeight: 700, margin: "0 0 4px" }}>CheckIn AI Pro</h3>
                       <p style={{ color: "#666", fontSize: 13, margin: 0 }}>$19.99 / month · 7-day free trial</p>
                     </div>
                     <span style={{ background: "#1e3a1e", color: "#4ade80", fontSize: 11, padding: "4px 12px", borderRadius: 20, fontWeight: 600 }}>Trial Active</span>
                   </div>
                   <div style={{ borderTop: "1px solid #2a2000", paddingTop: 20, marginBottom: 20 }}>
-                    {[["Plan", "Akeema Pro"], ["Status", "Free Trial"], ["Billing cycle", "Monthly"], ["Amount", "$19.99/month after trial"]].map(([label, val]) => (
+                    {[["Plan", "CheckIn AI Pro"], ["Status", "Free Trial"], ["Billing cycle", "Monthly"], ["Amount", "$19.99/month after trial"]].map(([label, val]) => (
                       <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                         <span style={{ color: "#555", fontSize: 13 }}>{label}</span>
                         <span style={{ color: "#ccc", fontSize: 13 }}>{val}</span>
@@ -986,7 +1086,7 @@ export default function App() {
                 {/* Quick links */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 28 }}>
                   {[
-                    ["🚀", "Getting Started", "Learn the basics of Akeema"],
+                    ["🚀", "Getting Started", "Learn the basics of CheckIn AI"],
                     ["👥", "Managing Clients", "Add, edit, and organise clients"],
                     ["🤖", "AI Analysis", "How the AI reviews check-ins"],
                     ["💳", "Billing & Plans", "Subscription and payment help"],
@@ -1007,7 +1107,7 @@ export default function App() {
                   <div style={{ padding: "16px 20px", borderBottom: "1px solid #1e1e1e", display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ width: 28, height: 28, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>⚡</div>
                     <div>
-                      <div style={{ color: "#fff", fontSize: 13, fontWeight: 600 }}>Akeema Assistant</div>
+                      <div style={{ color: "#fff", fontSize: 13, fontWeight: 600 }}>CheckIn AI Assistant</div>
                       <div style={{ color: "#4ade80", fontSize: 11 }}>● Online</div>
                     </div>
                   </div>
@@ -1053,7 +1153,7 @@ export default function App() {
                               body: JSON.stringify({
                                 model: "claude-sonnet-4-20250514",
                                 max_tokens: 1000,
-                                system: "You are a friendly support assistant for Akeema, an AI-powered client check-in platform for fitness coaches. You help coaches with: navigating the dashboard, adding/managing clients, understanding AI analysis, billing and subscriptions ($19.99/month with 7-day trial), settings, and troubleshooting. Keep answers concise, friendly, and practical. If asked something outside the app, politely redirect to akeemaai.com.",
+                                system: "You are a friendly support assistant for CheckIn AI, a SaaS platform for fitness coaches to manage client check-ins using AI. You help coaches with: navigating the dashboard, adding/managing clients, understanding AI analysis, billing and subscriptions ($19.99/month with 7-day trial), settings, and troubleshooting. Keep answers concise, friendly, and practical. If asked something outside the app, politely redirect.",
                                 messages: newMessages
                               })
                             });
@@ -1066,7 +1166,7 @@ export default function App() {
                           setHelpLoading(false);
                         }
                       }}
-                      placeholder="Ask anything about Akeema..."
+                      placeholder="Ask anything about CheckIn AI..."
                       style={{ flex: 1, background: "#222", border: "1px solid #333", borderRadius: 8, padding: "10px 14px", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
                     />
                     <button
@@ -1084,7 +1184,7 @@ export default function App() {
                             body: JSON.stringify({
                               model: "claude-sonnet-4-20250514",
                               max_tokens: 1000,
-                              system: "You are a friendly support assistant for Akeema, an AI-powered client check-in platform for fitness coaches. You help coaches with: navigating the dashboard, adding/managing clients, understanding AI analysis, billing and subscriptions ($19.99/month with 7-day trial), settings, and troubleshooting. Keep answers concise, friendly, and practical. If asked something outside the app, politely redirect to akeemaai.com.",
+                              system: "You are a friendly support assistant for CheckIn AI, a SaaS platform for fitness coaches to manage client check-ins using AI. You help coaches with: navigating the dashboard, adding/managing clients, understanding AI analysis, billing and subscriptions ($19.99/month with 7-day trial), settings, and troubleshooting. Keep answers concise, friendly, and practical. If asked something outside the app, politely redirect.",
                               messages: newMessages
                             })
                           });
@@ -1115,7 +1215,7 @@ export default function App() {
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Data & Privacy</h3>
                   {[
                     ["Store AI analysis results", "AI-generated analysis is saved to your dashboard", true],
-                    ["Anonymous usage analytics", "Help us improve Akeema with anonymous usage data", true],
+                    ["Anonymous usage analytics", "Help us improve CheckIn AI with anonymous usage data", true],
                     ["Share aggregated insights", "Contribute anonymized data to improve AI recommendations", false],
                   ].map(([title, desc, def]) => (
                     <div key={title} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid #1e1e1e" }}>
@@ -1176,7 +1276,7 @@ export default function App() {
       <div style={{ borderBottom: "1px solid #1e1e1e", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 32, height: 32, background: accent, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
-          <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
+          <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>CheckIn AI</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ color: "#555", fontSize: 13 }}>{user.firstName || user.emailAddresses[0]?.emailAddress}</span>
@@ -1194,7 +1294,7 @@ export default function App() {
             <div style={{ background: "linear-gradient(135deg, #1a1200, #1a0d00)", border: "1px solid #3a2800", borderRadius: 12, padding: "16px 24px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
               <div>
                 <span style={{ color: accent, fontWeight: 700, fontSize: 14 }}>🎉 7-day free trial active</span>
-                <span style={{ color: "#666", fontSize: 13, marginLeft: 12 }}>Upgrade anytime to keep full access at $19.99/month after your trial</span>
+                <span style={{ color: "#666", fontSize: 13, marginLeft: 12 }}>Upgrade anytime to keep full access at $19.99/month</span>
               </div>
               <button onClick={handleUpgrade} disabled={upgrading}
                 style={{ background: accent, color: "#000", border: "none", borderRadius: 8, padding: "10px 20px", fontWeight: 700, cursor: "pointer", fontSize: 13, fontFamily: "inherit", opacity: upgrading ? 0.7 : 1 }}>
