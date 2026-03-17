@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useUser, useClerk, SignIn } from "@clerk/react";
 import { supabase } from "./supabaseClient";
-
+ 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
+ 
 function AIAnalysisStream({ checkin, onDone }) {
   const [text, setText] = useState("");
   const [done, setDone] = useState(false);
-
+ 
   useEffect(() => {
     let cancelled = false;
     async function run() {
@@ -18,7 +18,7 @@ function AIAnalysisStream({ checkin, onDone }) {
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
           system: `You are an expert fitness coach AI assistant. Analyze client weekly check-ins and provide structured, actionable feedback for the coach. Be concise, specific, and empathetic. Format your response in clear sections:
-
+ 
 🔍 KEY OBSERVATIONS (2-3 bullet points)
 ⚠️ FLAGS (concerns to address, or "None" if all good)  
 🎯 SUGGESTED ADJUSTMENTS (specific changes to programming/nutrition)
@@ -26,11 +26,11 @@ function AIAnalysisStream({ checkin, onDone }) {
           messages: [{
             role: "user",
             content: `Analyze this client check-in:
-
+ 
 Client: ${checkin.clientName}
 Goal: ${checkin.goal}
 Week: ${checkin.week}
-
+ 
 Check-in Data:
 - Weight: ${checkin.weight} lbs (last week: ${checkin.last_weight} lbs)
 - Sleep quality: ${checkin.sleep}/10
@@ -40,15 +40,15 @@ Check-in Data:
 - Hunger levels: ${checkin.hunger}/10
 - Client notes: "${checkin.notes}"
 - Biggest challenge this week: "${checkin.challenge}"
-
+ 
 Provide coaching analysis and recommendations.`
           }]
         })
       });
-
+ 
       const data = await response.json();
       if (cancelled) return;
-
+ 
       const full = data.content?.[0]?.text || "Unable to generate analysis.";
       for (let i = 0; i <= full.length; i += 3) {
         if (cancelled) return;
@@ -62,7 +62,7 @@ Provide coaching analysis and recommendations.`
     run();
     return () => { cancelled = true; };
   }, []);
-
+ 
   return (
     <div style={{ fontFamily: "'Courier New', monospace", fontSize: 13, lineHeight: 1.7, color: "#e8e0d5", whiteSpace: "pre-wrap", minHeight: 120 }}>
       {text}
@@ -70,7 +70,7 @@ Provide coaching analysis and recommendations.`
     </div>
   );
 }
-
+ 
 export default function App() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { signOut } = useClerk();
@@ -80,10 +80,10 @@ export default function App() {
   const [savedSettings, setSavedSettings] = useState(false);
   const [coachBio, setCoachBio] = useState("");
   const [coachTitle, setCoachTitle] = useState("");
-  const [helpMessages, setHelpMessages] = useState([{ role: "assistant", content: "Hi! I'm your CheckIn AI assistant 👋 I can help you navigate the app, troubleshoot issues, or answer questions about your account. What do you need help with?" }]);
+  const [helpMessages, setHelpMessages] = useState([{ role: "assistant", content: "Hi! I'm your Akeema assistant 👋 I can help you navigate the app, troubleshoot issues, or answer questions about your account. What do you need help with?" }]);
   const [helpInput, setHelpInput] = useState("");
   const [helpLoading, setHelpLoading] = useState(false);
-
+ 
   async function handleUpgrade() {
     setUpgrading(true);
     try {
@@ -117,35 +117,35 @@ export default function App() {
     adherence: 100, energy: 7, hunger: 5, notes: "", challenge: "", goal: "Fat loss", week: 1
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
-
+ 
   const bg = "#0d0d0d";
   const card = { background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12 };
   const accent = "#f5a623";
   const green = "#4ade80";
   const red = "#f87171";
-
+ 
   // Load data from Supabase
   useEffect(() => {
     if (!isSignedIn || !user) return;
     loadData();
   }, [isSignedIn, user]);
-
+ 
   async function loadData() {
     setLoading(true);
     const coachId = user.id;
-
+ 
     const { data: clientsData } = await supabase
       .from("clients")
       .select("*")
       .eq("coach_id", coachId)
       .order("created_at", { ascending: false });
-
+ 
     const { data: checkinsData } = await supabase
       .from("checkins")
       .select("*, clients(name, goal)")
       .eq("coach_id", coachId)
       .order("created_at", { ascending: false });
-
+ 
     setClients(clientsData || []);
     setCheckins((checkinsData || []).map(c => ({
       ...c,
@@ -157,7 +157,7 @@ export default function App() {
     })));
     setLoading(false);
   }
-
+ 
   async function addClient() {
     if (!newClientName.trim()) return;
     const { data } = await supabase.from("clients").insert({
@@ -194,7 +194,7 @@ export default function App() {
       setShowAddClient(false);
     }
   }
-
+ 
   async function handleClientSubmit() {
     // Find or create client by name
     let clientId = null;
@@ -209,7 +209,7 @@ export default function App() {
       }).select().single();
       if (data) clientId = data.id;
     }
-
+ 
     const { data } = await supabase.from("checkins").insert({
       client_id: clientId,
       coach_id: user?.id || "public",
@@ -225,7 +225,7 @@ export default function App() {
       week_number: parseInt(clientForm.week),
       status: "pending"
     }).select("*, clients(name, goal)").single();
-
+ 
     if (data) {
       setCheckins(prev => [{
         ...data,
@@ -263,7 +263,7 @@ export default function App() {
       } catch(e) { console.error("Email error:", e); }
     }
   }
-
+ 
   function openReview(checkin) {
     setSelectedCheckin(checkin);
     setAnalyzing(true);
@@ -272,19 +272,19 @@ export default function App() {
     setApproved(false);
     setView("review");
   }
-
+ 
   function handleAnalysisDone(text) {
     setAnalyzing(false);
     setAnalysisText(text);
   }
-
+ 
   async function handleApprove() {
     await supabase.from("checkins").update({
       status: "approved",
       analysis: analysisText,
       coach_note: coachNote
     }).eq("id", selectedCheckin.id);
-
+ 
     setCheckins(prev => prev.map(c =>
       c.id === selectedCheckin.id ? { ...c, status: "approved", analysis: analysisText, coachNote } : c
     ));
@@ -312,7 +312,7 @@ export default function App() {
       }
     } catch(e) { console.error("Email error:", e); }
   }
-
+ 
   const SliderInput = ({ label, value, onChange, min = 1, max = 10, color = "#f5a623" }) => (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
@@ -324,7 +324,7 @@ export default function App() {
         style={{ width: "100%", accentColor: color, height: 4 }} />
     </div>
   );
-
+ 
   // Loading state
   if (!isLoaded) {
     return (
@@ -333,7 +333,7 @@ export default function App() {
       </div>
     );
   }
-
+ 
   // Allow clients to access check-in form without signing in
   const isCheckinUrl = new URLSearchParams(window.location.search).get("checkin") === "true";
   if (!isLoaded) return null;
@@ -433,7 +433,7 @@ export default function App() {
       </div>
     );
   }
-
+ 
   // Sign in page
   if (!isSignedIn) {
     return (
@@ -454,7 +454,7 @@ export default function App() {
       </div>
     );
   }
-
+ 
   // Client check-in form
   if (view === "checkin") {
     return (
@@ -485,7 +485,7 @@ export default function App() {
                 <h1 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 32, margin: "0 0 6px" }}>Weekly Check-in</h1>
                 <p style={{ color: "#666", fontSize: 14, margin: 0 }}>Be honest — your coach uses this to help you.</p>
               </div>
-
+ 
               <div style={{ ...card, padding: 28, marginBottom: 16 }}>
                 <h3 style={{ color: accent, fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Your Info</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
@@ -507,7 +507,7 @@ export default function App() {
                   ))}
                 </div>
               </div>
-
+ 
               <div style={{ ...card, padding: 28, marginBottom: 16 }}>
                 <h3 style={{ color: accent, fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 24px" }}>Rate Your Week</h3>
                 <SliderInput label="Sleep Quality" value={clientForm.sleep} onChange={v => setClientForm(p => ({ ...p, sleep: v }))} color="#818cf8" />
@@ -537,7 +537,7 @@ export default function App() {
                   </div>
                 </div>
               </div>
-
+ 
               <div style={{ ...card, padding: 28, marginBottom: 24 }}>
                 <h3 style={{ color: accent, fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>In Your Own Words</h3>
                 {[["How did the week go?", "notes", "Give your coach context..."], ["Biggest challenge this week?", "challenge", "What got in the way?"]].map(([lbl, key, ph]) => (
@@ -548,7 +548,7 @@ export default function App() {
                   </div>
                 ))}
               </div>
-
+ 
               <button onClick={handleClientSubmit}
                 style={{ width: "100%", background: accent, color: "#000", border: "none", borderRadius: 10, padding: "16px", fontWeight: 700, cursor: "pointer", fontSize: 16, fontFamily: "inherit" }}>
                 Submit Check-in →
@@ -559,7 +559,7 @@ export default function App() {
       </div>
     );
   }
-
+ 
   // Review page
   if (view === "review" && selectedCheckin) {
     const c = selectedCheckin;
@@ -575,7 +575,7 @@ export default function App() {
         `}</style>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
           <button onClick={() => setView("dashboard")} style={{ background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 13, padding: 0, marginBottom: 28 }}>← Back to dashboard</button>
-
+ 
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
             <div style={{ width: 52, height: 52, borderRadius: "50%", background: `linear-gradient(135deg, ${accent}, #e07b00)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16, color: "#000" }}>{c.avatar}</div>
             <div>
@@ -583,7 +583,7 @@ export default function App() {
               <p style={{ color: "#666", fontSize: 13, margin: 0 }}>Week {c.week} · {c.goal}</p>
             </div>
           </div>
-
+ 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
             {[
               { label: "Weight Change", value: `${weightChange > 0 ? "+" : ""}${weightChange.toFixed(1)} lbs`, color: weightChange < 0 && c.goal === "Fat loss" ? green : weightChange > 0 && c.goal === "Fat loss" ? red : "#fff" },
@@ -599,13 +599,13 @@ export default function App() {
               </div>
             ))}
           </div>
-
+ 
           <div style={{ ...card, padding: 24, marginBottom: 20 }}>
             <h3 style={{ color: "#555", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px" }}>Client Notes</h3>
             <p style={{ color: "#ccc", fontSize: 14, lineHeight: 1.7, margin: "0 0 12px" }}>"{c.notes}"</p>
             <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>Challenge: <span style={{ color: "#bbb" }}>{c.challenge}</span></p>
           </div>
-
+ 
           <div style={{ ...card, padding: 24, marginBottom: 20, borderColor: analyzing ? "#2a2218" : "#2a2a2a", background: analyzing ? "#121008" : "#161616" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: analyzing ? accent : green, animation: analyzing ? "pulse 1.5s infinite" : "none" }} />
@@ -615,7 +615,7 @@ export default function App() {
             </div>
             <AIAnalysisStream checkin={c} onDone={handleAnalysisDone} />
           </div>
-
+ 
           {!analyzing && !approved && (
             <div style={{ ...card, padding: 24, marginBottom: 20, animation: "fadeUp .4s ease" }}>
               <h3 style={{ color: "#555", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 12px" }}>Add Your Note (Optional)</h3>
@@ -628,7 +628,7 @@ export default function App() {
               </button>
             </div>
           )}
-
+ 
           {approved && (
             <div style={{ ...card, padding: 24, borderColor: "#1a3a1a", background: "#0d1f0d", animation: "fadeUp .4s ease", textAlign: "center" }}>
               <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
@@ -640,17 +640,17 @@ export default function App() {
       </div>
     );
   }
-
-
-
+ 
+ 
+ 
   // ── Legal / Security sub-pages ──────────────────────────────────────────
-
+ 
   const legalViews = ["privacy-policy", "terms", "dpa", "security"];
-
+ 
   if (legalViews.includes(view)) {
-
+ 
     const backTo = ["privacy-policy","terms","dpa"].includes(view) ? "settings" : "settings";
-
+ 
     // ── Shared shell ────────────────────────────────────────────────────────
     const Shell = ({ title, subtitle, children }) => (
       <div style={{ background: "#0d0d0d", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
@@ -658,7 +658,7 @@ export default function App() {
         <div style={{ borderBottom: "1px solid #1e1e1e", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => setView("dashboard")}>
             <div style={{ width: 32, height: 32, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
-            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>CheckIn AI</span>
+            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
           </div>
           <button onClick={() => { setView("settings"); setSettingsTab(["privacy-policy","terms","dpa"].includes(view) ? "privacy" : "account"); }}
             style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Back to Settings</button>
@@ -672,7 +672,7 @@ export default function App() {
         </div>
       </div>
     );
-
+ 
     const Section = ({ title, children }) => (
       <div style={{ marginBottom: 40 }}>
         <h2 style={{ color: "#f5a623", fontSize: 13, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px", fontWeight: 700 }}>{title}</h2>
@@ -681,18 +681,18 @@ export default function App() {
         </div>
       </div>
     );
-
+ 
     const P = ({ children }) => <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: "0 0 14px" }}>{children}</p>;
     const Li = ({ children }) => <li style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, marginBottom: 8 }}>{children}</li>;
     const Ul = ({ children }) => <ul style={{ paddingLeft: 20, margin: "0 0 14px" }}>{children}</ul>;
     const lastUpdated = "March 1, 2026";
-
+ 
     // ── PRIVACY POLICY ──────────────────────────────────────────────────────
     if (view === "privacy-policy") return (
       <Shell title="Privacy Policy" subtitle={`Last updated: ${lastUpdated}`}>
         <Section title="1. Introduction">
-          <P>CheckIn AI ("we", "our", or "us") is committed to protecting the privacy of coaches and their clients who use our platform. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.</P>
-          <P>By using CheckIn AI, you agree to the collection and use of information in accordance with this policy.</P>
+          <P>Akeema ("we", "our", or "us") is committed to protecting the privacy of coaches and their clients who use our platform. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.</P>
+          <P>By using Akeema, you agree to the collection and use of information in accordance with this policy.</P>
         </Section>
         <Section title="2. Information We Collect">
           <P>We collect information you provide directly to us, including:</P>
@@ -737,18 +737,18 @@ export default function App() {
         </Section>
       </Shell>
     );
-
+ 
     // ── TERMS OF SERVICE ────────────────────────────────────────────────────
     if (view === "terms") return (
       <Shell title="Terms of Service" subtitle={`Last updated: ${lastUpdated}`}>
         <Section title="1. Acceptance of Terms">
-          <P>By accessing or using CheckIn AI, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service. These terms apply to all coaches, users, and others who access the service.</P>
+          <P>By accessing or using Akeema, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service. These terms apply to all coaches, users, and others who access the service.</P>
         </Section>
         <Section title="2. Description of Service">
-          <P>CheckIn AI is a subscription-based software platform that enables fitness coaches to collect, review, and respond to client check-ins using AI-powered analysis. The service includes a coach dashboard, client check-in forms, AI-generated feedback, and subscription management tools.</P>
+          <P>Akeema is a subscription-based software platform that enables fitness coaches to collect, review, and respond to client check-ins using AI-powered analysis. The service includes a coach dashboard, client check-in forms, AI-generated feedback, and subscription management tools.</P>
         </Section>
         <Section title="3. Subscriptions & Billing">
-          <P>CheckIn AI is offered on a monthly subscription basis at $19.99/month. A 7-day free trial is available for new accounts. After the trial period, your payment method will be charged automatically. You may cancel at any time through the Billing section of your settings.</P>
+          <P>Akeema is offered on a monthly subscription basis at $19.99/month. A 7-day free trial is available for new accounts. After the trial period, your payment method will be charged automatically. You may cancel at any time through the Billing section of your settings.</P>
           <Ul>
             <Li>Subscriptions auto-renew monthly unless cancelled</Li>
             <Li>Refunds are handled on a case-by-case basis</Li>
@@ -756,7 +756,7 @@ export default function App() {
           </Ul>
         </Section>
         <Section title="4. Acceptable Use">
-          <P>You agree to use CheckIn AI only for lawful purposes and in accordance with these terms. You may not:</P>
+          <P>You agree to use Akeema only for lawful purposes and in accordance with these terms. You may not:</P>
           <Ul>
             <Li>Use the service to collect data without client consent</Li>
             <Li>Attempt to gain unauthorized access to our systems</Li>
@@ -766,42 +766,42 @@ export default function App() {
           </Ul>
         </Section>
         <Section title="5. AI-Generated Content">
-          <P>CheckIn AI uses artificial intelligence to generate coaching suggestions and analysis. This content is intended to assist coaches, not replace professional judgment. You are solely responsible for reviewing AI-generated content before sharing it with clients. CheckIn AI is not liable for decisions made based on AI outputs.</P>
+          <P>Akeema uses artificial intelligence to generate coaching suggestions and analysis. This content is intended to assist coaches, not replace professional judgment. You are solely responsible for reviewing AI-generated content before sharing it with clients. Akeema is not liable for decisions made based on AI outputs.</P>
         </Section>
         <Section title="6. Client Data Responsibility">
           <P>As a coach using our platform, you are responsible for obtaining appropriate consent from your clients to collect and process their data. You agree to handle client data in compliance with applicable privacy laws in your jurisdiction.</P>
         </Section>
         <Section title="7. Intellectual Property">
-          <P>The CheckIn AI platform, including its design, code, and content, is owned by us and protected by intellectual property laws. You retain ownership of all data you input into the platform. We do not claim ownership of your client data or coaching content.</P>
+          <P>The Akeema platform, including its design, code, and content, is owned by us and protected by intellectual property laws. You retain ownership of all data you input into the platform. We do not claim ownership of your client data or coaching content.</P>
         </Section>
         <Section title="8. Termination">
           <P>We reserve the right to suspend or terminate your account for violations of these terms. You may cancel your account at any time. Upon termination, your data will be retained for 30 days before permanent deletion, giving you time to export your information.</P>
         </Section>
         <Section title="9. Limitation of Liability">
-          <P>To the maximum extent permitted by law, CheckIn AI shall not be liable for any indirect, incidental, or consequential damages arising from your use of the service. Our total liability shall not exceed the amount you paid us in the 3 months preceding the claim.</P>
+          <P>To the maximum extent permitted by law, Akeema shall not be liable for any indirect, incidental, or consequential damages arising from your use of the service. Our total liability shall not exceed the amount you paid us in the 3 months preceding the claim.</P>
         </Section>
         <Section title="10. Contact">
           <P>For questions about these Terms of Service, contact us through the Help section in your dashboard.</P>
         </Section>
       </Shell>
     );
-
+ 
     // ── DATA PROCESSING AGREEMENT ───────────────────────────────────────────
     if (view === "dpa") return (
       <Shell title="Data Processing Agreement" subtitle={`Last updated: ${lastUpdated}`}>
         <Section title="1. Purpose & Scope">
-          <P>This Data Processing Agreement ("DPA") forms part of the agreement between CheckIn AI ("Processor") and the coach using our platform ("Controller"). It governs the processing of personal data of clients submitted through the CheckIn AI platform in accordance with applicable data protection laws.</P>
+          <P>This Data Processing Agreement ("DPA") forms part of the agreement between Akeema ("Processor") and the coach using our platform ("Controller"). It governs the processing of personal data of clients submitted through the Akeema platform in accordance with applicable data protection laws.</P>
         </Section>
         <Section title="2. Definitions">
           <Ul>
             <Li><strong style={{color:"#fff"}}>Personal Data:</strong> Any information relating to an identified or identifiable natural person (your clients)</Li>
             <Li><strong style={{color:"#fff"}}>Processing:</strong> Any operation performed on personal data, including collection, storage, and analysis</Li>
             <Li><strong style={{color:"#fff"}}>Controller:</strong> The coach who determines the purpose and means of processing client data</Li>
-            <Li><strong style={{color:"#fff"}}>Processor:</strong> CheckIn AI, which processes data on behalf of the Controller</Li>
+            <Li><strong style={{color:"#fff"}}>Processor:</strong> Akeema, which processes data on behalf of the Controller</Li>
           </Ul>
         </Section>
         <Section title="3. Data Processing Details">
-          <P>CheckIn AI processes the following categories of client data on your behalf:</P>
+          <P>Akeema processes the following categories of client data on your behalf:</P>
           <Ul>
             <Li>Body metrics (weight, measurements)</Li>
             <Li>Lifestyle data (sleep, stress, energy, hunger levels)</Li>
@@ -811,7 +811,7 @@ export default function App() {
           </Ul>
         </Section>
         <Section title="4. Processor Obligations">
-          <P>CheckIn AI agrees to:</P>
+          <P>Akeema agrees to:</P>
           <Ul>
             <Li>Process personal data only on documented instructions from the Controller</Li>
             <Li>Ensure persons authorized to process data are bound by confidentiality</Li>
@@ -822,7 +822,7 @@ export default function App() {
           </Ul>
         </Section>
         <Section title="5. Sub-Processors">
-          <P>CheckIn AI uses the following authorized sub-processors:</P>
+          <P>Akeema uses the following authorized sub-processors:</P>
           <Ul>
             <Li><strong style={{color:"#fff"}}>Supabase</strong> — Database storage (United States)</Li>
             <Li><strong style={{color:"#fff"}}>Anthropic</strong> — AI analysis processing (United States)</Li>
@@ -842,14 +842,14 @@ export default function App() {
           </Ul>
         </Section>
         <Section title="7. Data Transfers">
-          <P>Your client data is stored and processed in the United States. By using CheckIn AI, you acknowledge that data may be transferred to and processed in the US, which may have different data protection laws than your country.</P>
+          <P>Your client data is stored and processed in the United States. By using Akeema, you acknowledge that data may be transferred to and processed in the US, which may have different data protection laws than your country.</P>
         </Section>
         <Section title="8. Term & Termination">
-          <P>This DPA remains in effect for the duration of your CheckIn AI subscription. Upon termination, we will delete all personal data within 30 days unless retention is required by law.</P>
+          <P>This DPA remains in effect for the duration of your Akeema subscription. Upon termination, we will delete all personal data within 30 days unless retention is required by law.</P>
         </Section>
       </Shell>
     );
-
+ 
     // ── SECURITY SETTINGS ───────────────────────────────────────────────────
     if (view === "security") return (
       <Shell title="Security Settings" subtitle="Manage your account security and authentication preferences.">
@@ -876,7 +876,7 @@ export default function App() {
             <button style={{ background: "#f5a623", border: "none", borderRadius: 8, padding: "8px 16px", color: "#000", cursor: "pointer", fontSize: 12, fontFamily: "inherit", fontWeight: 700 }}>Enable 2FA</button>
           </div>
         </Section>
-
+ 
         <Section title="Connected Accounts">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -891,7 +891,7 @@ export default function App() {
             </span>
           </div>
         </Section>
-
+ 
         <Section title="Active Sessions">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
@@ -904,7 +904,7 @@ export default function App() {
             Sign Out All Other Sessions
           </button>
         </Section>
-
+ 
         <Section title="Account Actions">
           <P>Need to make changes to your email or connected accounts? These are managed through your authentication provider.</P>
           <button onClick={() => signOut()} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "10px 20px", color: "#ccc", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
@@ -914,12 +914,12 @@ export default function App() {
       </Shell>
     );
   }
-
+ 
   // Settings page
   if (view === "settings") {
     const tabs = ["general", "account", "billing", "privacy", "help"];
     const tabLabels = { general: "General", account: "Account", billing: "Billing", privacy: "Privacy", help: "Help & Support" };
-
+ 
     return (
       <div style={{ background: "#0d0d0d", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
         <style>{`
@@ -928,19 +928,19 @@ export default function App() {
           @keyframes fadeUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:none } }
           .settings-tab:hover { color: #fff !important; }
         `}</style>
-
+ 
         {/* Header */}
         <div style={{ borderBottom: "1px solid #1e1e1e", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => setView("dashboard")}>
             <div style={{ width: 32, height: 32, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
-            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>CheckIn AI</span>
+            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <button onClick={() => setView("dashboard")} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Dashboard</button>
             <button onClick={() => signOut()} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Sign out</button>
           </div>
         </div>
-
+ 
         <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", minHeight: "calc(100vh - 73px)" }}>
           {/* Sidebar */}
           <div style={{ borderRight: "1px solid #1e1e1e", padding: "32px 0" }}>
@@ -952,16 +952,16 @@ export default function App() {
               </button>
             ))}
           </div>
-
+ 
           {/* Content */}
           <div style={{ padding: "40px", maxWidth: 640, animation: "fadeUp .3s ease" }}>
-
+ 
             {/* GENERAL TAB */}
             {settingsTab === "general" && (
               <div>
                 <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>General</h2>
                 <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Manage your coaching profile and preferences.</p>
-
+ 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Coach Profile</h3>
                   {[["Display Name", user.firstName + " " + (user.lastName || ""), false], ["Email", user.emailAddresses[0]?.emailAddress, true]].map(([label, val, disabled]) => (
@@ -987,7 +987,7 @@ export default function App() {
                     {savedSettings ? "✓ Saved!" : "Save Changes"}
                   </button>
                 </div>
-
+ 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28 }}>
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Notifications</h3>
                   {[["Email me when a client submits a check-in", true], ["Weekly summary of client progress", true], ["Product updates and announcements", false]].map(([label, def]) => (
@@ -1001,13 +1001,13 @@ export default function App() {
                 </div>
               </div>
             )}
-
+ 
             {/* ACCOUNT TAB */}
             {settingsTab === "account" && (
               <div>
                 <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Account</h2>
                 <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Manage your account security and data.</p>
-
+ 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Account Info</h3>
                   <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 24 }}>
@@ -1024,7 +1024,7 @@ export default function App() {
                     <p style={{ color: "#555", fontSize: 13, margin: "0 0 12px" }}>Member since {new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
                   </div>
                 </div>
-
+ 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 8px" }}>Password & Security</h3>
                   <p style={{ color: "#555", fontSize: 13, margin: "0 0 16px" }}>Password and security settings are managed through your sign-in provider.</p>
@@ -1032,7 +1032,7 @@ export default function App() {
                     Manage Security Settings →
                   </button>
                 </div>
-
+ 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, borderColor: "#2a1a1a" }}>
                   <h3 style={{ color: "#f87171", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 8px" }}>Danger Zone</h3>
                   <p style={{ color: "#555", fontSize: 13, margin: "0 0 16px" }}>Once you delete your account, all data will be permanently removed.</p>
@@ -1042,23 +1042,23 @@ export default function App() {
                 </div>
               </div>
             )}
-
+ 
             {/* BILLING TAB */}
             {settingsTab === "billing" && (
               <div>
                 <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Billing</h2>
                 <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Manage your subscription and payment details.</p>
-
+ 
                 <div style={{ background: "linear-gradient(135deg, #1a1200, #161616)", border: "1px solid #3a2800", borderRadius: 12, padding: 28, marginBottom: 20 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
                     <div>
-                      <h3 style={{ color: "#f5a623", fontSize: 16, fontWeight: 700, margin: "0 0 4px" }}>CheckIn AI Pro</h3>
+                      <h3 style={{ color: "#f5a623", fontSize: 16, fontWeight: 700, margin: "0 0 4px" }}>Akeema Pro</h3>
                       <p style={{ color: "#666", fontSize: 13, margin: 0 }}>$19.99 / month · 7-day free trial</p>
                     </div>
                     <span style={{ background: "#1e3a1e", color: "#4ade80", fontSize: 11, padding: "4px 12px", borderRadius: 20, fontWeight: 600 }}>Trial Active</span>
                   </div>
                   <div style={{ borderTop: "1px solid #2a2000", paddingTop: 20, marginBottom: 20 }}>
-                    {[["Plan", "CheckIn AI Pro"], ["Status", "Free Trial"], ["Billing cycle", "Monthly"], ["Amount", "$19.99/month after trial"]].map(([label, val]) => (
+                    {[["Plan", "Akeema Pro"], ["Status", "Free Trial"], ["Billing cycle", "Monthly"], ["Amount", "$19.99/month after trial"]].map(([label, val]) => (
                       <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                         <span style={{ color: "#555", fontSize: 13 }}>{label}</span>
                         <span style={{ color: "#ccc", fontSize: 13 }}>{val}</span>
@@ -1070,7 +1070,7 @@ export default function App() {
                     {upgrading ? "Redirecting to Stripe..." : "Manage Subscription →"}
                   </button>
                 </div>
-
+ 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28 }}>
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px" }}>What's Included</h3>
                   {["Unlimited AI check-in analysis", "Unlimited clients", "AI-powered coaching suggestions", "Progress tracking dashboard", "Secure client check-in forms", "Priority support"].map(feature => (
@@ -1082,19 +1082,19 @@ export default function App() {
                 </div>
               </div>
             )}
-
+ 
             {/* HELP TAB */}
-
+ 
             {/* HELP TAB */}
             {settingsTab === "help" && (
               <div>
                 <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Help & Support</h2>
                 <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Get instant help from our AI assistant or browse common topics.</p>
-
+ 
                 {/* Quick links */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 28 }}>
                   {[
-                    ["🚀", "Getting Started", "Learn the basics of CheckIn AI"],
+                    ["🚀", "Getting Started", "Learn the basics of Akeema"],
                     ["👥", "Managing Clients", "Add, edit, and organise clients"],
                     ["🤖", "AI Analysis", "How the AI reviews check-ins"],
                     ["💳", "Billing & Plans", "Subscription and payment help"],
@@ -1109,17 +1109,17 @@ export default function App() {
                     </div>
                   ))}
                 </div>
-
+ 
                 {/* AI Chat */}
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, overflow: "hidden" }}>
                   <div style={{ padding: "16px 20px", borderBottom: "1px solid #1e1e1e", display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ width: 28, height: 28, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>⚡</div>
                     <div>
-                      <div style={{ color: "#fff", fontSize: 13, fontWeight: 600 }}>CheckIn AI Assistant</div>
+                      <div style={{ color: "#fff", fontSize: 13, fontWeight: 600 }}>Akeema Assistant</div>
                       <div style={{ color: "#4ade80", fontSize: 11 }}>● Online</div>
                     </div>
                   </div>
-
+ 
                   {/* Messages */}
                   <div style={{ height: 340, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 14 }}
                     ref={el => { if (el) el.scrollTop = el.scrollHeight; }}>
@@ -1141,7 +1141,7 @@ export default function App() {
                       </div>
                     )}
                   </div>
-
+ 
                   {/* Input */}
                   <div style={{ padding: "12px 16px", borderTop: "1px solid #1e1e1e", display: "flex", gap: 10 }}>
                     <input
@@ -1161,7 +1161,7 @@ export default function App() {
                               body: JSON.stringify({
                                 model: "claude-sonnet-4-20250514",
                                 max_tokens: 1000,
-                                system: "You are a friendly support assistant for CheckIn AI, a SaaS platform for fitness coaches to manage client check-ins using AI. You help coaches with: navigating the dashboard, adding/managing clients, understanding AI analysis, billing and subscriptions ($19.99/month with 7-day trial), settings, and troubleshooting. Keep answers concise, friendly, and practical. If asked something outside the app, politely redirect.",
+                                system: "You are a friendly support assistant for Akeema, a SaaS platform for fitness coaches to manage client check-ins using AI. You help coaches with: navigating the dashboard, adding/managing clients, understanding AI analysis, billing and subscriptions ($19.99/month with 7-day trial), settings, and troubleshooting. Keep answers concise, friendly, and practical. If asked something outside the app, politely redirect.",
                                 messages: newMessages
                               })
                             });
@@ -1174,7 +1174,7 @@ export default function App() {
                           setHelpLoading(false);
                         }
                       }}
-                      placeholder="Ask anything about CheckIn AI..."
+                      placeholder="Ask anything about Akeema..."
                       style={{ flex: 1, background: "#222", border: "1px solid #333", borderRadius: 8, padding: "10px 14px", color: "#fff", fontSize: 13, fontFamily: "inherit" }}
                     />
                     <button
@@ -1192,7 +1192,7 @@ export default function App() {
                             body: JSON.stringify({
                               model: "claude-sonnet-4-20250514",
                               max_tokens: 1000,
-                              system: "You are a friendly support assistant for CheckIn AI, a SaaS platform for fitness coaches to manage client check-ins using AI. You help coaches with: navigating the dashboard, adding/managing clients, understanding AI analysis, billing and subscriptions ($19.99/month with 7-day trial), settings, and troubleshooting. Keep answers concise, friendly, and practical. If asked something outside the app, politely redirect.",
+                              system: "You are a friendly support assistant for Akeema, a SaaS platform for fitness coaches to manage client check-ins using AI. You help coaches with: navigating the dashboard, adding/managing clients, understanding AI analysis, billing and subscriptions ($19.99/month with 7-day trial), settings, and troubleshooting. Keep answers concise, friendly, and practical. If asked something outside the app, politely redirect.",
                               messages: newMessages
                             })
                           });
@@ -1209,21 +1209,21 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-
+ 
               </div>
             )}
-
+ 
             {/* PRIVACY TAB */}
             {settingsTab === "privacy" && (
               <div>
                 <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Privacy</h2>
                 <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Control how your data and your clients' data is handled.</p>
-
+ 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Data & Privacy</h3>
                   {[
                     ["Store AI analysis results", "AI-generated analysis is saved to your dashboard", true],
-                    ["Anonymous usage analytics", "Help us improve CheckIn AI with anonymous usage data", true],
+                    ["Anonymous usage analytics", "Help us improve Akeema with anonymous usage data", true],
                     ["Share aggregated insights", "Contribute anonymized data to improve AI recommendations", false],
                   ].map(([title, desc, def]) => (
                     <div key={title} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid #1e1e1e" }}>
@@ -1237,7 +1237,7 @@ export default function App() {
                     </div>
                   ))}
                 </div>
-
+ 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 12px" }}>Client Data</h3>
                   <p style={{ color: "#666", fontSize: 13, lineHeight: 1.7, margin: "0 0 16px" }}>
@@ -1247,7 +1247,7 @@ export default function App() {
                     Clients can request deletion of their data at any time by contacting you directly.
                   </p>
                 </div>
-
+ 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28 }}>
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 12px" }}>Legal</h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1260,17 +1260,17 @@ export default function App() {
                 </div>
               </div>
             )}
-
+ 
           </div>
         </div>
       </div>
     );
   }
-
+ 
   // Dashboard
   const pendingCheckins = checkins.filter(c => c.status === "pending");
   const approvedCheckins = checkins.filter(c => c.status === "approved");
-
+ 
   return (
     <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
@@ -1280,11 +1280,11 @@ export default function App() {
         .hover-card:hover { border-color: #3a3a3a !important; transform: translateY(-1px); transition: all .15s ease; }
         .cta-btn:hover { background: #e09920 !important; }
       `}</style>
-
+ 
       <div style={{ borderBottom: "1px solid #1e1e1e", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 32, height: 32, background: accent, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
-          <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>CheckIn AI</span>
+          <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ color: "#555", fontSize: 13 }}>{user.firstName || user.emailAddresses[0]?.emailAddress}</span>
@@ -1292,7 +1292,7 @@ export default function App() {
           <button onClick={() => signOut()} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Sign out</button>
         </div>
       </div>
-
+ 
       <div style={{ padding: "40px", width: "100%" }}>
         {loading ? (
           <div style={{ color: "#555", fontSize: 14, textAlign: "center", paddingTop: 60 }}>Loading your dashboard...</div>
@@ -1309,7 +1309,7 @@ export default function App() {
                 {upgrading ? "Redirecting..." : "Upgrade to Pro →"}
               </button>
             </div>
-
+ 
             <div style={{ marginBottom: 40, animation: "fadeUp .4s ease" }}>
               <h1 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 36, margin: "0 0 6px" }}>
                 Good morning, {user.firstName || "Coach"} 👋
@@ -1320,7 +1320,7 @@ export default function App() {
                   : "All caught up! No pending check-ins."}
               </p>
             </div>
-
+ 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 40 }}>
               {[
                 { label: "Active Clients", value: clients.length, icon: "👥" },
@@ -1335,14 +1335,14 @@ export default function App() {
                 </div>
               ))}
             </div>
-
+ 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24 }}>
               <div>
                 <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
                   Pending Check-ins
                   {pendingCheckins.length > 0 && <span style={{ background: accent, color: "#000", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>{pendingCheckins.length}</span>}
                 </h2>
-
+ 
                 {pendingCheckins.length === 0 ? (
                   <div style={{ ...card, padding: 40, textAlign: "center" }}>
                     <div style={{ fontSize: 32, marginBottom: 12 }}>🎉</div>
@@ -1355,7 +1355,7 @@ export default function App() {
                     if (c.adherence < 80) flags.push({ label: `${c.adherence}% adherence`, color: red });
                     if (c.stress >= 8) flags.push({ label: "High stress", color: "#fb923c" });
                     if (c.sleep < 6) flags.push({ label: "Poor sleep", color: "#818cf8" });
-
+ 
                     return (
                       <div key={c.id} className="hover-card" onClick={() => openReview(c)}
                         style={{ ...card, padding: 24, marginBottom: 12, cursor: "pointer", transition: "all .15s ease" }}>
@@ -1369,7 +1369,7 @@ export default function App() {
                           </div>
                           <div style={{ background: "#1e1200", color: accent, fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 600 }}>Needs review</div>
                         </div>
-
+ 
                         <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
                           <span style={{ fontSize: 12, color: weightChange < 0 ? green : red, background: weightChange < 0 ? "#0d2010" : "#1f0d0d", padding: "4px 10px", borderRadius: 20 }}>
                             {weightChange > 0 ? "+" : ""}{weightChange.toFixed(1)} lbs
@@ -1379,7 +1379,7 @@ export default function App() {
                             <span key={f.label} style={{ fontSize: 12, color: f.color, background: "#1a1a1a", padding: "4px 10px", borderRadius: 20 }}>⚠ {f.label}</span>
                           ))}
                         </div>
-
+ 
                         <p style={{ color: "#666", fontSize: 13, margin: "0 0 16px", lineHeight: 1.5, fontStyle: "italic" }}>"{(c.notes || "").slice(0, 100)}..."</p>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <span style={{ fontSize: 12, color: "#555" }}>Click to review with AI →</span>
@@ -1389,7 +1389,7 @@ export default function App() {
                     );
                   })
                 )}
-
+ 
                 {approvedCheckins.length > 0 && (
                   <>
                     <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: "32px 0 16px" }}>Recently Approved</h2>
@@ -1410,7 +1410,7 @@ export default function App() {
                   </>
                 )}
               </div>
-
+ 
               <div>
                 <div style={{ ...card, padding: 24, marginBottom: 20, background: "linear-gradient(135deg, #1a1200, #161616)", borderColor: "#2a2000" }}>
                   <h3 style={{ color: accent, fontSize: 13, fontWeight: 700, margin: "0 0 8px" }}>Client Check-in Form</h3>
@@ -1423,7 +1423,7 @@ export default function App() {
                     Preview Client Form →
                   </button>
                 </div>
-
+ 
                 <div style={{ ...card, padding: 24 }}>
                   <h3 style={{ color: "#fff", fontSize: 14, fontWeight: 700, margin: "0 0 16px" }}>Your Clients</h3>
                   {clients.length === 0 && <p style={{ color: "#555", fontSize: 13, margin: "0 0 16px" }}>No clients yet — add your first one!</p>}
@@ -1441,7 +1441,7 @@ export default function App() {
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: green }} />
                     </div>
                   ))}
-
+ 
                   {showAddClient ? (
                     <div style={{ marginTop: 16, borderTop: "1px solid #1e1e1e", paddingTop: 16 }}>
                       <input placeholder="Client name" value={newClientName} onChange={e => setNewClientName(e.target.value)}
