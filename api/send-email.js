@@ -1,14 +1,14 @@
 import { Resend } from 'resend';
-
+ 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = 'Akeema <noreply@akeemaai.com>';
-
+const FROM = 'CheckIn AI <onboarding@resend.dev>';
+ 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
+ 
   try {
     const { type, data } = req.body;
-
+ 
     if (type === 'new-checkin') {
       // Coach gets notified when client submits check-in
       await resend.emails.send({
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
           <div style="font-family:'DM Sans',sans-serif;background:#0d0d0d;padding:40px;max-width:600px;margin:0 auto;border-radius:16px;">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px;">
               <div style="width:36px;height:36px;background:#f5a623;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">⚡</div>
-              <span style="font-size:20px;font-weight:700;color:#fff;">Akeema</span>
+              <span style="font-size:20px;font-weight:700;color:#fff;">CheckIn AI</span>
             </div>
             <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">New Check-In Received</h1>
             <p style="color:#888;font-size:15px;margin:0 0 28px;">${data.clientName} just submitted their weekly check-in and is waiting for your review.</p>
@@ -33,53 +33,64 @@ export default async function handler(req, res) {
               ${data.notes ? `<div style="margin-top:16px;padding-top:16px;border-top:1px solid #222;"><div style="color:#555;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Client Notes</div><div style="color:#aaa;font-size:14px;line-height:1.6;">${data.notes}</div></div>` : ''}
             </div>
             <a href="${data.appUrl}" style="display:inline-block;background:#f5a623;color:#000;text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:700;font-size:15px;">Review Check-In →</a>
-            <p style="color:#444;font-size:12px;margin-top:32px;">You're receiving this because you're a Akeema coach. <a href="${data.appUrl}/settings" style="color:#f5a623;">Manage notifications</a></p>
+            <p style="color:#444;font-size:12px;margin-top:32px;">You're receiving this because you're a CheckIn AI coach. <a href="${data.appUrl}/settings" style="color:#f5a623;">Manage notifications</a></p>
           </div>
         `
       });
     }
-
+ 
     else if (type === 'feedback-sent') {
       // Client gets notified when coach sends feedback
       await resend.emails.send({
         from: FROM,
         to: data.clientEmail,
-        subject: `💪 Your coach reviewed your check-in`,
+        subject: `💪 ${data.coachName} sent you feedback on your check-in`,
         html: `
           <div style="font-family:'DM Sans',sans-serif;background:#0d0d0d;padding:40px;max-width:600px;margin:0 auto;border-radius:16px;">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px;">
               <div style="width:36px;height:36px;background:#f5a623;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">⚡</div>
               <span style="font-size:20px;font-weight:700;color:#fff;">Akeema</span>
             </div>
-            <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Your Coach Has Reviewed Your Check-In</h1>
-            <p style="color:#888;font-size:15px;margin:0 0 28px;">Great work staying consistent! ${data.coachName} has reviewed your weekly check-in and left you feedback.</p>
+            <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Feedback from ${data.coachName}</h1>
+            <p style="color:#888;font-size:15px;margin:0 0 28px;">Great work this week! ${data.coachName} has reviewed your check-in and sent you their feedback below.</p>
             ${data.coachNote ? `
             <div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:24px;margin-bottom:28px;">
-              <div style="color:#f5a623;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Message from ${data.coachName}</div>
+              <div style="color:#f5a623;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">From ${data.coachName}</div>
               <div style="color:#ccc;font-size:15px;line-height:1.7;">${data.coachNote}</div>
             </div>` : ''}
-            ${data.analysis ? `
+            ${data.analysis ? (() => {
+              // Extract coach message draft if present, otherwise clean the full analysis
+              const coachMsgMatch = data.analysis.match(/COACH MESSAGE DRAFT[\s\S]*?"([\s\S]*?)"/i);
+              const displayText = coachMsgMatch 
+                ? coachMsgMatch[1].trim()
+                : data.analysis
+                    .replace(/#{1,3}\s*/g, '')
+                    .replace(/\*\*/g, '')
+                    .replace(/^[-•]\s*/gm, '• ')
+                    .trim();
+              return `
             <div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:24px;margin-bottom:28px;">
-              <div style="color:#f5a623;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">AI Analysis</div>
-              <div style="color:#aaa;font-size:14px;line-height:1.7;">${data.analysis.substring(0, 500)}${data.analysis.length > 500 ? '...' : ''}</div>
-            </div>` : ''}
-            <p style="color:#444;font-size:12px;margin-top:32px;">Sent via Akeema · <a href="mailto:${data.coachEmail}" style="color:#f5a623;">Contact your coach</a></p>
+              <div style="color:#f5a623;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">From ${data.coachName}</div>
+              <div style="color:#ccc;font-size:15px;line-height:1.8;">${displayText.replace(/\n/g, '<br>')}</div>
+            </div>`;
+            })() : ''}
+            <p style="color:#444;font-size:12px;margin-top:32px;">Sent by ${data.coachName} via Akeema · <a href="mailto:${data.coachEmail}" style="color:#f5a623;">Reply to your coach</a></p>
           </div>
         `
       });
     }
-
+ 
     else if (type === 'weekly-summary') {
       // Weekly summary to coach
       await resend.emails.send({
         from: FROM,
         to: data.coachEmail,
-        subject: `📊 Your weekly Akeema summary`,
+        subject: `📊 Your weekly CheckIn AI summary`,
         html: `
           <div style="font-family:'DM Sans',sans-serif;background:#0d0d0d;padding:40px;max-width:600px;margin:0 auto;border-radius:16px;">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px;">
               <div style="width:36px;height:36px;background:#f5a623;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">⚡</div>
-              <span style="font-size:20px;font-weight:700;color:#fff;">Akeema</span>
+              <span style="font-size:20px;font-weight:700;color:#fff;">CheckIn AI</span>
             </div>
             <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Weekly Summary</h1>
             <p style="color:#888;font-size:15px;margin:0 0 28px;">Here's how your coaching practice performed this week, ${data.coachName}.</p>
@@ -107,21 +118,21 @@ export default async function handler(req, res) {
         `
       });
     }
-
+ 
     else if (type === 'welcome-client') {
       // Welcome email when coach adds a new client
       await resend.emails.send({
         from: FROM,
         to: data.clientEmail,
-        subject: `👋 ${data.coachName} has added you to Akeema`,
+        subject: `👋 ${data.coachName} has added you to CheckIn AI`,
         html: `
           <div style="font-family:'DM Sans',sans-serif;background:#0d0d0d;padding:40px;max-width:600px;margin:0 auto;border-radius:16px;">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px;">
               <div style="width:36px;height:36px;background:#f5a623;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">⚡</div>
-              <span style="font-size:20px;font-weight:700;color:#fff;">Akeema</span>
+              <span style="font-size:20px;font-weight:700;color:#fff;">CheckIn AI</span>
             </div>
-            <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Welcome to Akeema! 🎉</h1>
-            <p style="color:#888;font-size:15px;margin:0 0 28px;">Your coach <strong style="color:#fff;">${data.coachName}</strong> has set you up on Akeema — a platform for submitting your weekly check-ins and getting personalised AI-powered feedback.</p>
+            <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Welcome to CheckIn AI! 🎉</h1>
+            <p style="color:#888;font-size:15px;margin:0 0 28px;">Your coach <strong style="color:#fff;">${data.coachName}</strong> has set you up on CheckIn AI — a platform for submitting your weekly check-ins and getting personalised AI-powered feedback.</p>
             <div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:24px;margin-bottom:28px;">
               <div style="color:#f5a623;font-size:13px;font-weight:700;margin-bottom:16px;">How it works</div>
               ${[
@@ -140,7 +151,7 @@ export default async function handler(req, res) {
         `
       });
     }
-
+ 
     res.status(200).json({ success: true });
   } catch (error) {
     console.error('Email error:', error.message);
