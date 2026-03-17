@@ -1,14 +1,14 @@
 import { Resend } from 'resend';
- 
+
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = 'Akeema <noreply@akeemaai.com>';
- 
+const FROM = 'CheckIn AI <onboarding@resend.dev>';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
- 
+
   try {
     const { type, data } = req.body;
- 
+
     if (type === 'new-checkin') {
       // Coach gets notified when client submits check-in
       await resend.emails.send({
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
         `
       });
     }
- 
+
     else if (type === 'feedback-sent') {
       // Client gets notified when coach sends feedback
       await resend.emails.send({
@@ -58,28 +58,18 @@ export default async function handler(req, res) {
               <div style="color:#f5a623;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">From ${data.coachName}</div>
               <div style="color:#ccc;font-size:15px;line-height:1.7;">${data.coachNote}</div>
             </div>` : ''}
-            ${data.analysis ? (() => {
-              // Extract coach message draft if present, otherwise clean the full analysis
-              const coachMsgMatch = data.analysis.match(/COACH MESSAGE DRAFT[\s\S]*?"([\s\S]*?)"/i);
-              const displayText = coachMsgMatch 
-                ? coachMsgMatch[1].trim()
-                : data.analysis
-                    .replace(/#{1,3}\s*/g, '')
-                    .replace(/\*\*/g, '')
-                    .replace(/^[-•]\s*/gm, '• ')
-                    .trim();
-              return `
+            ${data.analysis ? `
             <div style="background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:24px;margin-bottom:28px;">
-              <div style="color:#f5a623;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">From ${data.coachName}</div>
-              <div style="color:#ccc;font-size:15px;line-height:1.8;">${displayText.replace(/\n/g, '<br>')}</div>
-            </div>`;
-            })() : ''}
+              <div style="color:#f5a623;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Weekly Review</div>
+              <div style="color:#ccc;font-size:14px;line-height:1.8;">${data.analysis.replace(/#{1,3} */g, '').replace(/\*\*/g, '').replace(/
+/g, '<br>').substring(0, 800)}</div>
+            </div>` : ''}
             <p style="color:#444;font-size:12px;margin-top:32px;">Sent by ${data.coachName} via Akeema · <a href="mailto:${data.coachEmail}" style="color:#f5a623;">Reply to your coach</a></p>
           </div>
         `
       });
     }
- 
+
     else if (type === 'weekly-summary') {
       // Weekly summary to coach
       await resend.emails.send({
@@ -118,7 +108,7 @@ export default async function handler(req, res) {
         `
       });
     }
- 
+
     else if (type === 'welcome-client') {
       // Welcome email when coach adds a new client
       await resend.emails.send({
@@ -151,7 +141,7 @@ export default async function handler(req, res) {
         `
       });
     }
- 
+
     res.status(200).json({ success: true });
   } catch (error) {
     console.error('Email error:', error.message);
