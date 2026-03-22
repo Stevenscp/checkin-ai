@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser, useClerk, SignIn } from "@clerk/react";
 import { supabase } from "./supabaseClient";
 
@@ -262,11 +262,26 @@ export default function App() {
   const green = "#4ade80";
   const red = "#f87171";
 
-  // Load data from Supabase
+  // Load data from Supabase — only once, skip on tab switch
+  const dataLoaded = React.useRef(false);
+
   useEffect(() => {
     if (!isSignedIn || !user) return;
+    if (dataLoaded.current) return;
+    dataLoaded.current = true;
     loadData();
   }, [isSignedIn, user]);
+
+  // Prevent reload when switching tabs
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        // Do nothing — data already loaded
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
 
   async function loadData() {
     setLoading(true);
