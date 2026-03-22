@@ -1488,12 +1488,12 @@ export default function App() {
                 <div key={s.label} onClick={() => setActiveFilter(activeFilter === s.filter ? null : s.filter)}
                   className="hover-card"
                   style={{ ...card, padding: "20px 24px", cursor: "pointer", transition: "all .15s ease",
-                    borderColor: activeFilter === s.filter ? accent : s.highlight ? "#3a2800" : "#2a2a2a",
-                    background: activeFilter === s.filter ? "#1e1200" : s.highlight ? "#1a1200" : "#161616" }}>
+                    borderColor: activeFilter === s.filter ? "#3b82f6" : s.highlight ? "#3a2800" : "#2a2a2a",
+                    background: activeFilter === s.filter ? "#0f1e3a" : s.highlight ? "#1a1200" : "#161616" }}>
                   <div style={{ fontSize: 20, marginBottom: 8 }}>{s.icon}</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: activeFilter === s.filter ? accent : s.highlight ? accent : "#fff", marginBottom: 2 }}>{s.value}</div>
-                  <div style={{ fontSize: 12, color: activeFilter === s.filter ? accent : "#555", textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</div>
-                  {activeFilter === s.filter && <div style={{ fontSize: 10, color: accent, marginTop: 4 }}>● Filtering</div>}
+                  <div style={{ fontSize: 28, fontWeight: 700, color: activeFilter === s.filter ? "#3b82f6" : s.highlight ? accent : "#fff", marginBottom: 2 }}>{s.value}</div>
+                  <div style={{ fontSize: 12, color: activeFilter === s.filter ? "#3b82f6" : "#555", textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</div>
+                  {activeFilter === s.filter && <div style={{ fontSize: 10, color: "#3b82f6", marginTop: 4 }}>● Filtering</div>}
                 </div>
               ))}
             </div>
@@ -1503,7 +1503,7 @@ export default function App() {
               <div style={{ ...card, padding: 28, marginBottom: 32 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                   <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: 0 }}>👥 Active Clients ({clients.length})</h2>
-                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>✕ Clear</button>
+                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Back</button>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
                   {clients.map(c => (
@@ -1523,7 +1523,7 @@ export default function App() {
               <div style={{ ...card, padding: 28, marginBottom: 32 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                   <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: 0 }}>⏳ Pending Reviews ({pendingCheckins.length})</h2>
-                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>✕ Clear</button>
+                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Back</button>
                 </div>
                 {pendingCheckins.length === 0 ? (
                   <p style={{ color: "#555", fontSize: 14 }}>No pending check-ins!</p>
@@ -1547,12 +1547,13 @@ export default function App() {
               <div style={{ ...card, padding: 28, marginBottom: 32 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                   <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: 0 }}>✅ Approved This Week ({approvedCheckins.length})</h2>
-                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>✕ Clear</button>
+                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Back</button>
                 </div>
                 {approvedCheckins.length === 0 ? (
                   <p style={{ color: "#555", fontSize: 14 }}>No approved check-ins this week.</p>
                 ) : approvedCheckins.map(c => (
-                  <div key={c.id} style={{ background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div key={c.id} className="hover-card" onClick={() => openReview(c)}
+                    style={{ background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
                     <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                       <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #4ade80, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#000" }}>{c.avatar}</div>
                       <div>
@@ -1560,7 +1561,10 @@ export default function App() {
                         <div style={{ color: "#555", fontSize: 12 }}>Week {c.week} · {c.goal}</div>
                       </div>
                     </div>
-                    <span style={{ background: "#1e3a1e", color: "#4ade80", fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 600 }}>✓ Reviewed</span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ background: "#1e3a1e", color: "#4ade80", fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 600 }}>✓ Reviewed</span>
+                      <span style={{ color: "#555", fontSize: 11 }}>View →</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1570,7 +1574,7 @@ export default function App() {
               <div style={{ ...card, padding: 28, marginBottom: 32 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                   <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: 0 }}>📈 Total Check-ins ({checkins.length})</h2>
-                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>✕ Clear</button>
+                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Back</button>
                 </div>
                 {checkins.length === 0 ? (
                   <p style={{ color: "#555", fontSize: 14 }}>No check-ins yet.</p>
