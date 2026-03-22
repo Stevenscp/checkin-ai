@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser, useClerk, SignIn } from "@clerk/react";
 import { supabase } from "./supabaseClient";
 
@@ -210,6 +210,10 @@ export default function App() {
   const [upgrading, setUpgrading] = useState(false);
   const [view, setView] = useState("dashboard");
   const [activeFilter, setActiveFilter] = useState(null);
+  const [editingClient, setEditingClient] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editGoal, setEditGoal] = useState("");
+  const [confirmRemove, setConfirmRemove] = useState(null);
   const [settingsTab, setSettingsTab] = useState("general");
   const [savedSettings, setSavedSettings] = useState(false);
   const [coachBio, setCoachBio] = useState("");
@@ -258,11 +262,26 @@ export default function App() {
   const green = "#4ade80";
   const red = "#f87171";
 
-  // Load data from Supabase
+  // Load data from Supabase — only once, skip on tab switch
+  const dataLoaded = React.useRef(false);
+
   useEffect(() => {
     if (!isSignedIn || !user) return;
+    if (dataLoaded.current) return;
+    dataLoaded.current = true;
     loadData();
   }, [isSignedIn, user]);
+
+  // Prevent reload when switching tabs
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        // Do nothing — data already loaded
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
 
   async function loadData() {
     setLoading(true);
@@ -850,166 +869,6 @@ export default function App() {
   }
 
 
-
-
-  // Progress Charts View
-  if (view === "progress" && selectedClient) {
-    const clientCheckins = checkins
-      .filter(c => c.client_id === selectedClient.id && c.status === "approved")
-      .sort((a, b) => a.week_number - b.week_number);
-
-    const weeks = clientCheckins.map(c => `Wk ${c.week_number || c.week}`);
-    const weights = clientCheckins.map(c => c.weight);
-    const adherence = clientCheckins.map(c => c.adherence);
-    const sleep = clientCheckins.map(c => c.sleep);
-    const energy = clientCheckins.map(c => c.energy);
-    const stress = clientCheckins.map(c => c.stress);
-
-    const maxWeight = Math.max(...weights, 1);
-    const minWeight = Math.min(...weights, 0);
-    const weightRange = maxWeight - minWeight || 1;
-
-    function LineChart({ data, max, min, color, label, unit = "" }) {
-      const range = (max - min) || 1;
-      const h = 120;
-      const w = 100;
-      if (data.length < 2) return (
-        <div style={{ textAlign: "center", color: "#444", fontSize: 12, padding: "40px 0" }}>Need at least 2 check-ins to show trend</div>
-      );
-      const points = data.map((v, i) => {
-        const x = (i / (data.length - 1)) * w;
-        const y = h - ((v - min) / range) * h;
-        return `${x},${y}`;
-      }).join(" ");
-      const latest = data[data.length - 1];
-      const prev = data[data.length - 2];
-      const change = latest - prev;
-      return (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-            <span style={{ color: "#555", fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}>{label}</span>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-              <span style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>{latest}{unit}</span>
-              <span style={{ fontSize: 11, color: change < 0 ? "#4ade80" : change > 0 ? "#f87171" : "#555" }}>
-                {change > 0 ? "+" : ""}{change.toFixed(1)}{unit}
-              </span>
-            </div>
-          </div>
-          <svg viewBox={`0 0 100 ${h}`} style={{ width: "100%", height: h, overflow: "visible" }}>
-            <defs>
-              <linearGradient id={`grad-${label}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-                <stop offset="100%" stopColor={color} stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <polyline
-              points={points}
-              fill="none"
-              stroke={color}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            {data.map((v, i) => {
-              const x = (i / (data.length - 1)) * w;
-              const y = h - ((v - min) / range) * h;
-              return <circle key={i} cx={x} cy={y} r="2.5" fill={color} />;
-            })}
-          </svg>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-            {weeks.map((w, i) => (
-              <span key={i} style={{ fontSize: 9, color: "#444" }}>{w}</span>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    const weightChange = weights.length >= 2 ? weights[weights.length-1] - weights[0] : 0;
-    const avgAdherence = adherence.length ? Math.round(adherence.reduce((a,b) => a+b, 0) / adherence.length) : 0;
-    const avgSleep = sleep.length ? (sleep.reduce((a,b) => a+b, 0) / sleep.length).toFixed(1) : 0;
-
-    return (
-      <div style={{ background: "#0d0d0d", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap'); * { box-sizing: border-box; }`}</style>
-
-        {/* Header */}
-        <div style={{ borderBottom: "1px solid #1e1e1e", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
-            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
-          </div>
-          <button onClick={() => setView("dashboard")} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Dashboard</button>
-        </div>
-
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 24px" }}>
-          {/* Client Header */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
-            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e07b00)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 18, color: "#000" }}>
-              {selectedClient.name.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
-            </div>
-            <div>
-              <h1 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 28, margin: "0 0 4px" }}>{selectedClient.name}</h1>
-              <p style={{ color: "#555", fontSize: 14, margin: 0 }}>{selectedClient.goal} · {clientCheckins.length} check-ins</p>
-            </div>
-          </div>
-
-          {clientCheckins.length === 0 ? (
-            <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 60, textAlign: "center" }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>📊</div>
-              <p style={{ color: "#555", fontSize: 15 }}>No approved check-ins yet. Progress charts will appear once you approve check-ins for this client.</p>
-            </div>
-          ) : (
-            <>
-              {/* Summary Stats */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
-                {[
-                  { label: "Total Weight Change", value: `${weightChange > 0 ? "+" : ""}${weightChange.toFixed(1)} lbs`, color: weightChange < 0 ? "#4ade80" : weightChange > 0 ? "#f87171" : "#fff" },
-                  { label: "Avg Adherence", value: `${avgAdherence}%`, color: avgAdherence >= 80 ? "#4ade80" : avgAdherence >= 60 ? "#f5a623" : "#f87171" },
-                  { label: "Avg Sleep", value: `${avgSleep}/10`, color: avgSleep >= 7 ? "#4ade80" : "#f5a623" },
-                ].map(s => (
-                  <div key={s.label} style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: "18px 20px" }}>
-                    <div style={{ color: "#555", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{s.label}</div>
-                    <div style={{ color: s.color, fontSize: 24, fontWeight: 700 }}>{s.value}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Charts Grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                {[
-                  { data: weights, min: minWeight - 2, max: maxWeight + 2, color: "#f5a623", label: "Weight", unit: " lbs" },
-                  { data: adherence, min: 0, max: 100, color: "#3b82f6", label: "Adherence", unit: "%" },
-                  { data: sleep, min: 0, max: 10, color: "#818cf8", label: "Sleep Quality", unit: "/10" },
-                  { data: energy, min: 0, max: 10, color: "#4ade80", label: "Energy", unit: "/10" },
-                  { data: stress, min: 0, max: 10, color: "#f87171", label: "Stress", unit: "/10" },
-                ].map(chart => (
-                  <div key={chart.label} style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 24 }}>
-                    <LineChart {...chart} />
-                  </div>
-                ))}
-
-                {/* Check-in History */}
-                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 24 }}>
-                  <div style={{ color: "#555", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Check-in History</div>
-                  {[...clientCheckins].reverse().map((c, i) => (
-                    <div key={c.id} onClick={() => { setSelectedCheckin(c); setAnalyzing(false); setAnalysisText(c.analysis || ""); setCoachNote(c.coach_note || ""); setApproved(true); setView("review"); }}
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < clientCheckins.length - 1 ? "1px solid #1e1e1e" : "none", cursor: "pointer" }}>
-                      <div>
-                        <div style={{ color: "#ccc", fontSize: 13, fontWeight: 500 }}>Week {c.week_number || c.week}</div>
-                        <div style={{ color: "#555", fontSize: 11 }}>{c.weight} lbs · {c.adherence}% adherence</div>
-                      </div>
-                      <span style={{ color: "#555", fontSize: 11 }}>View →</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   // ── Legal / Security sub-pages ──────────────────────────────────────────
 
@@ -1716,6 +1575,7 @@ export default function App() {
                   <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: 0 }}>👥 Active Clients ({clients.length})</h2>
                   <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Back</button>
                 </div>
+
                 {/* Confirm Remove Modal */}
                 {confirmRemove && (
                   <div style={{ background: "#1a0a0a", border: "1px solid #f87171", borderRadius: 12, padding: 20, marginBottom: 16 }}>
@@ -1737,6 +1597,7 @@ export default function App() {
                   {clients.map(c => (
                     <div key={c.id} style={{ background: "#1e1e1e", border: `1px solid ${editingClient?.id === c.id ? accent : "#2a2a2a"}`, borderRadius: 10, padding: "16px 18px" }}>
                       {editingClient?.id === c.id ? (
+                        // Edit mode
                         <div>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
                             <div>
@@ -1754,12 +1615,17 @@ export default function App() {
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
                             <button onClick={() => saveClientEdit(c.id)}
-                              style={{ background: accent, color: "#000", border: "none", borderRadius: 8, padding: "7px 16px", fontWeight: 700, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Save</button>
+                              style={{ background: accent, color: "#000", border: "none", borderRadius: 8, padding: "7px 16px", fontWeight: 700, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                              Save
+                            </button>
                             <button onClick={() => setEditingClient(null)}
-                              style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "7px 16px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Cancel</button>
+                              style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "7px 16px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                              Cancel
+                            </button>
                           </div>
                         </div>
                       ) : (
+                        // View mode
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                             <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${accent}, #e07b00)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#000" }}>
@@ -1771,10 +1637,6 @@ export default function App() {
                             </div>
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <button onClick={() => { setSelectedClient(c); setView("progress"); }}
-                              style={{ background: "none", border: "1px solid #3b82f6", borderRadius: 8, padding: "6px 14px", color: "#3b82f6", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
-                              📈 Progress
-                            </button>
                             <button onClick={() => { setEditingClient(c); setEditName(c.name); setEditGoal(c.goal); }}
                               style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 14px", color: "#aaa", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
                               ✏️ Edit
@@ -1852,7 +1714,8 @@ export default function App() {
                 {checkins.length === 0 ? (
                   <p style={{ color: "#555", fontSize: 14 }}>No check-ins yet.</p>
                 ) : checkins.map(c => (
-                  <div key={c.id} style={{ background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div key={c.id} className="hover-card" onClick={() => openReview(c)}
+                    style={{ background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
                     <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                       <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${accent}, #e07b00)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#000" }}>{c.avatar}</div>
                       <div>
@@ -1860,9 +1723,12 @@ export default function App() {
                         <div style={{ color: "#555", fontSize: 12 }}>Week {c.week} · {c.goal}</div>
                       </div>
                     </div>
-                    <span style={{ background: c.status === "approved" ? "#1e3a1e" : "#1a1200", color: c.status === "approved" ? "#4ade80" : accent, fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 600 }}>
-                      {c.status === "approved" ? "✓ Reviewed" : "Pending"}
-                    </span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ background: c.status === "approved" ? "#1e3a1e" : "#1a1200", color: c.status === "approved" ? "#4ade80" : accent, fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 600 }}>
+                        {c.status === "approved" ? "✓ Reviewed" : "Pending"}
+                      </span>
+                      <span style={{ color: "#555", fontSize: 11 }}>View →</span>
+                    </div>
                   </div>
                 ))}
               </div>
