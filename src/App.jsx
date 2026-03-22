@@ -415,10 +415,18 @@ export default function App() {
 
   function openReview(checkin) {
     setSelectedCheckin(checkin);
-    setAnalyzing(true);
-    setAnalysisText("");
-    setCoachNote("");
-    setApproved(false);
+    if (checkin.status === "approved") {
+      // Already approved — load existing analysis, skip AI
+      setAnalyzing(false);
+      setAnalysisText(checkin.analysis || "");
+      setCoachNote(checkin.coach_note || "");
+      setApproved(true);
+    } else {
+      setAnalyzing(true);
+      setAnalysisText("");
+      setCoachNote("");
+      setApproved(false);
+    }
     setView("review");
   }
 
@@ -721,6 +729,7 @@ export default function App() {
   if (view === "review" && selectedCheckin) {
     const c = selectedCheckin;
     const weightChange = c.weight - (c.lastWeight || c.last_weight || 0);
+    const isReadOnly = c.status === "approved";
     return (
       <div style={{ background: bg, minHeight: "100vh", padding: "40px 20px", fontFamily: "'DM Sans', sans-serif" }}>
         <style>{`
@@ -763,35 +772,63 @@ export default function App() {
             <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>Challenge: <span style={{ color: "#bbb" }}>{c.challenge}</span></p>
           </div>
 
-          <div style={{ ...card, padding: 24, marginBottom: 20, borderColor: analyzing ? "#2a2218" : "#2a2a2a", background: analyzing ? "#121008" : "#161616" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: analyzing ? accent : green, animation: analyzing ? "pulse 1.5s infinite" : "none" }} />
-              <h3 style={{ color: analyzing ? accent : green, fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: 0 }}>
-                {analyzing ? "AI Analyzing Check-in..." : "AI Analysis Complete"}
-              </h3>
-            </div>
-            <AIAnalysisStream checkin={c} onDone={handleAnalysisDone} />
-          </div>
+          {isReadOnly ? (
+            // Read-only view for already approved checkins
+            <>
+              {c.coach_note && (
+                <div style={{ ...card, padding: 24, marginBottom: 20, borderColor: "#1a3a1a", background: "#0d1f0d" }}>
+                  <h3 style={{ color: green, fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 12px" }}>Your Note</h3>
+                  <p style={{ color: "#ccc", fontSize: 14, lineHeight: 1.7, margin: 0 }}>{c.coach_note}</p>
+                </div>
+              )}
+              <div style={{ ...card, padding: 24, marginBottom: 20, borderColor: "#1a3a1a", background: "#0d1f0d" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: green }} />
+                  <h3 style={{ color: green, fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: 0 }}>Approved Feedback</h3>
+                </div>
+                <div style={{ color: "#ccc", fontSize: 14, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                  {(c.analysis || "No analysis recorded.").replace(/#{1,3}\s*/g, "").replace(/\*\*/g, "")}
+                </div>
+              </div>
+              <div style={{ ...card, padding: 20, textAlign: "center", borderColor: "#1a3a1a", background: "#0d1f0d" }}>
+                <p style={{ color: green, fontWeight: 700, fontSize: 14, margin: "0 0 4px" }}>✓ Feedback sent to {c.clientName}</p>
+                <p style={{ color: "#555", fontSize: 12, margin: 0 }}>This check-in has been reviewed and approved</p>
+              </div>
+            </>
+          ) : (
+            // Active review — run AI analysis
+            <>
+              <div style={{ ...card, padding: 24, marginBottom: 20, borderColor: analyzing ? "#2a2218" : "#2a2a2a", background: analyzing ? "#121008" : "#161616" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: analyzing ? accent : green, animation: analyzing ? "pulse 1.5s infinite" : "none" }} />
+                  <h3 style={{ color: analyzing ? accent : green, fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: 0 }}>
+                    {analyzing ? "AI Analyzing Check-in..." : "AI Analysis Complete"}
+                  </h3>
+                </div>
+                <AIAnalysisStream checkin={c} onDone={handleAnalysisDone} />
+              </div>
 
-          {!analyzing && !approved && (
-            <div style={{ ...card, padding: 24, marginBottom: 20, animation: "fadeUp .4s ease" }}>
-              <h3 style={{ color: "#555", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 12px" }}>Add Your Note (Optional)</h3>
-              <textarea rows={3} placeholder="Add anything before sending..." value={coachNote}
-                onChange={e => setCoachNote(e.target.value)}
-                style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "12px 14px", color: "#fff", fontSize: 14, resize: "vertical", fontFamily: "inherit", outline: "none" }} />
-              <button onClick={handleApprove}
-                style={{ marginTop: 16, width: "100%", background: green, color: "#000", border: "none", borderRadius: 10, padding: "14px", fontWeight: 700, cursor: "pointer", fontSize: 15, fontFamily: "inherit" }}>
-                ✓ Approve & Send Feedback
-              </button>
-            </div>
-          )}
+              {!analyzing && !approved && (
+                <div style={{ ...card, padding: 24, marginBottom: 20, animation: "fadeUp .4s ease" }}>
+                  <h3 style={{ color: "#555", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 12px" }}>Add Your Note (Optional)</h3>
+                  <textarea rows={3} placeholder="Add anything before sending..." value={coachNote}
+                    onChange={e => setCoachNote(e.target.value)}
+                    style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "12px 14px", color: "#fff", fontSize: 14, resize: "vertical", fontFamily: "inherit", outline: "none" }} />
+                  <button onClick={handleApprove}
+                    style={{ marginTop: 16, width: "100%", background: green, color: "#000", border: "none", borderRadius: 10, padding: "14px", fontWeight: 700, cursor: "pointer", fontSize: 15, fontFamily: "inherit" }}>
+                    ✓ Approve & Send Feedback
+                  </button>
+                </div>
+              )}
 
-          {approved && (
-            <div style={{ ...card, padding: 24, borderColor: "#1a3a1a", background: "#0d1f0d", animation: "fadeUp .4s ease", textAlign: "center" }}>
-              <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
-              <p style={{ color: green, fontWeight: 700, fontSize: 16, margin: "0 0 4px" }}>Feedback saved for {c.clientName}</p>
-              <p style={{ color: "#555", fontSize: 13, margin: 0 }}>Check-in marked complete</p>
-            </div>
+              {approved && (
+                <div style={{ ...card, padding: 24, borderColor: "#1a3a1a", background: "#0d1f0d", animation: "fadeUp .4s ease", textAlign: "center" }}>
+                  <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
+                  <p style={{ color: green, fontWeight: 700, fontSize: 16, margin: "0 0 4px" }}>Feedback saved for {c.clientName}</p>
+                  <p style={{ color: "#555", fontSize: 13, margin: 0 }}>Check-in marked complete</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
