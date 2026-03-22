@@ -209,6 +209,7 @@ export default function App() {
   const { signOut } = useClerk();
   const [upgrading, setUpgrading] = useState(false);
   const [view, setView] = useState("dashboard");
+  const [activeFilter, setActiveFilter] = useState(null);
   const [settingsTab, setSettingsTab] = useState("general");
   const [savedSettings, setSavedSettings] = useState(false);
   const [coachBio, setCoachBio] = useState("");
@@ -1479,18 +1480,116 @@ export default function App() {
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 40 }}>
               {[
-                { label: "Active Clients", value: clients.length, icon: "👥" },
-                { label: "Pending Reviews", value: pendingCheckins.length, icon: "⏳", highlight: pendingCheckins.length > 0 },
-                { label: "Approved This Week", value: approvedCheckins.length, icon: "✅" },
-                { label: "Total Check-ins", value: checkins.length, icon: "📈" },
+                { label: "Active Clients", value: clients.length, icon: "👥", filter: "clients" },
+                { label: "Pending Reviews", value: pendingCheckins.length, icon: "⏳", highlight: pendingCheckins.length > 0, filter: "pending" },
+                { label: "Approved This Week", value: approvedCheckins.length, icon: "✅", filter: "approved" },
+                { label: "Total Check-ins", value: checkins.length, icon: "📈", filter: "total" },
               ].map(s => (
-                <div key={s.label} style={{ ...card, padding: "20px 24px", borderColor: s.highlight ? "#3a2800" : "#2a2a2a", background: s.highlight ? "#1a1200" : "#161616" }}>
+                <div key={s.label} onClick={() => setActiveFilter(activeFilter === s.filter ? null : s.filter)}
+                  className="hover-card"
+                  style={{ ...card, padding: "20px 24px", cursor: "pointer", transition: "all .15s ease",
+                    borderColor: activeFilter === s.filter ? accent : s.highlight ? "#3a2800" : "#2a2a2a",
+                    background: activeFilter === s.filter ? "#1e1200" : s.highlight ? "#1a1200" : "#161616" }}>
                   <div style={{ fontSize: 20, marginBottom: 8 }}>{s.icon}</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: s.highlight ? accent : "#fff", marginBottom: 2 }}>{s.value}</div>
-                  <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: activeFilter === s.filter ? accent : s.highlight ? accent : "#fff", marginBottom: 2 }}>{s.value}</div>
+                  <div style={{ fontSize: 12, color: activeFilter === s.filter ? accent : "#555", textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</div>
+                  {activeFilter === s.filter && <div style={{ fontSize: 10, color: accent, marginTop: 4 }}>● Filtering</div>}
                 </div>
               ))}
             </div>
+
+            {/* Filter View */}
+            {activeFilter === "clients" && (
+              <div style={{ ...card, padding: 28, marginBottom: 32 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: 0 }}>👥 Active Clients ({clients.length})</h2>
+                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>✕ Clear</button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+                  {clients.map(c => (
+                    <div key={c.id} style={{ background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px" }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${accent}, #e07b00)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#000", marginBottom: 10 }}>
+                        {c.name.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
+                      </div>
+                      <div style={{ color: "#fff", fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{c.name}</div>
+                      <div style={{ color: "#555", fontSize: 12 }}>{c.goal}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeFilter === "pending" && (
+              <div style={{ ...card, padding: 28, marginBottom: 32 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: 0 }}>⏳ Pending Reviews ({pendingCheckins.length})</h2>
+                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>✕ Clear</button>
+                </div>
+                {pendingCheckins.length === 0 ? (
+                  <p style={{ color: "#555", fontSize: 14 }}>No pending check-ins!</p>
+                ) : pendingCheckins.map(c => (
+                  <div key={c.id} className="hover-card" onClick={() => openReview(c)}
+                    style={{ background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px", marginBottom: 10, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${accent}, #e07b00)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#000" }}>{c.avatar}</div>
+                      <div>
+                        <div style={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>{c.clientName}</div>
+                        <div style={{ color: "#555", fontSize: 12 }}>Week {c.week} · {c.goal}</div>
+                      </div>
+                    </div>
+                    <span style={{ background: "#1a1200", color: accent, fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 600 }}>Needs review</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeFilter === "approved" && (
+              <div style={{ ...card, padding: 28, marginBottom: 32 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: 0 }}>✅ Approved This Week ({approvedCheckins.length})</h2>
+                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>✕ Clear</button>
+                </div>
+                {approvedCheckins.length === 0 ? (
+                  <p style={{ color: "#555", fontSize: 14 }}>No approved check-ins this week.</p>
+                ) : approvedCheckins.map(c => (
+                  <div key={c.id} style={{ background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #4ade80, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#000" }}>{c.avatar}</div>
+                      <div>
+                        <div style={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>{c.clientName}</div>
+                        <div style={{ color: "#555", fontSize: 12 }}>Week {c.week} · {c.goal}</div>
+                      </div>
+                    </div>
+                    <span style={{ background: "#1e3a1e", color: "#4ade80", fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 600 }}>✓ Reviewed</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeFilter === "total" && (
+              <div style={{ ...card, padding: 28, marginBottom: 32 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: 0 }}>📈 Total Check-ins ({checkins.length})</h2>
+                  <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>✕ Clear</button>
+                </div>
+                {checkins.length === 0 ? (
+                  <p style={{ color: "#555", fontSize: 14 }}>No check-ins yet.</p>
+                ) : checkins.map(c => (
+                  <div key={c.id} style={{ background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${accent}, #e07b00)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#000" }}>{c.avatar}</div>
+                      <div>
+                        <div style={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>{c.clientName}</div>
+                        <div style={{ color: "#555", fontSize: 12 }}>Week {c.week} · {c.goal}</div>
+                      </div>
+                    </div>
+                    <span style={{ background: c.status === "approved" ? "#1e3a1e" : "#1a1200", color: c.status === "approved" ? "#4ade80" : accent, fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 600 }}>
+                      {c.status === "approved" ? "✓ Reviewed" : "Pending"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24 }}>
               <div>
