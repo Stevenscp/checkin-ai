@@ -210,6 +210,10 @@ export default function App() {
   const [upgrading, setUpgrading] = useState(false);
   const [view, setView] = useState("dashboard");
   const [activeFilter, setActiveFilter] = useState(null);
+  const [editingClient, setEditingClient] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editGoal, setEditGoal] = useState("");
+  const [confirmRemove, setConfirmRemove] = useState(null);
   const [settingsTab, setSettingsTab] = useState("general");
   const [savedSettings, setSavedSettings] = useState(false);
   const [coachBio, setCoachBio] = useState("");
@@ -411,6 +415,20 @@ export default function App() {
         }
       } catch(e) { console.error("Email error:", e); }
     }
+  }
+
+  async function removeClient(clientId) {
+    await supabase.from("checkins").delete().eq("client_id", clientId);
+    await supabase.from("clients").delete().eq("id", clientId);
+    setClients(prev => prev.filter(c => c.id !== clientId));
+    setCheckins(prev => prev.filter(c => c.client_id !== clientId));
+    setConfirmRemove(null);
+  }
+
+  async function saveClientEdit(clientId) {
+    await supabase.from("clients").update({ name: editName, goal: editGoal }).eq("id", clientId);
+    setClients(prev => prev.map(c => c.id === clientId ? { ...c, name: editName, goal: editGoal } : c));
+    setEditingClient(null);
   }
 
   function openReview(checkin) {
@@ -1542,14 +1560,79 @@ export default function App() {
                   <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: 0 }}>👥 Active Clients ({clients.length})</h2>
                   <button onClick={() => setActiveFilter(null)} style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 12px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Back</button>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+
+                {/* Confirm Remove Modal */}
+                {confirmRemove && (
+                  <div style={{ background: "#1a0a0a", border: "1px solid #f87171", borderRadius: 12, padding: 20, marginBottom: 16 }}>
+                    <p style={{ color: "#fff", fontSize: 14, margin: "0 0 16px" }}>Are you sure you want to remove <strong>{confirmRemove.name}</strong>? This will delete all their check-ins too.</p>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button onClick={() => removeClient(confirmRemove.id)}
+                        style={{ background: "#f87171", color: "#000", border: "none", borderRadius: 8, padding: "8px 20px", fontWeight: 700, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+                        Yes, Remove
+                      </button>
+                      <button onClick={() => setConfirmRemove(null)}
+                        style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "8px 20px", color: "#666", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {clients.map(c => (
-                    <div key={c.id} style={{ background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px" }}>
-                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${accent}, #e07b00)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#000", marginBottom: 10 }}>
-                        {c.name.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
-                      </div>
-                      <div style={{ color: "#fff", fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{c.name}</div>
-                      <div style={{ color: "#555", fontSize: 12 }}>{c.goal}</div>
+                    <div key={c.id} style={{ background: "#1e1e1e", border: `1px solid ${editingClient?.id === c.id ? accent : "#2a2a2a"}`, borderRadius: 10, padding: "16px 18px" }}>
+                      {editingClient?.id === c.id ? (
+                        // Edit mode
+                        <div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                            <div>
+                              <label style={{ display: "block", fontSize: 11, color: "#666", marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>Name</label>
+                              <input value={editName} onChange={e => setEditName(e.target.value)}
+                                style={{ width: "100%", background: "#111", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, fontFamily: "inherit" }} />
+                            </div>
+                            <div>
+                              <label style={{ display: "block", fontSize: 11, color: "#666", marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>Goal</label>
+                              <select value={editGoal} onChange={e => setEditGoal(e.target.value)}
+                                style={{ width: "100%", background: "#111", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, fontFamily: "inherit" }}>
+                                {["Fat loss", "Muscle gain", "Strength", "Endurance", "General fitness"].map(g => <option key={g}>{g}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button onClick={() => saveClientEdit(c.id)}
+                              style={{ background: accent, color: "#000", border: "none", borderRadius: 8, padding: "7px 16px", fontWeight: 700, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                              Save
+                            </button>
+                            <button onClick={() => setEditingClient(null)}
+                              style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "7px 16px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        // View mode
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                            <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${accent}, #e07b00)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#000" }}>
+                              {c.name.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
+                            </div>
+                            <div>
+                              <div style={{ color: "#fff", fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{c.name}</div>
+                              <div style={{ color: "#555", fontSize: 12 }}>{c.goal}</div>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button onClick={() => { setEditingClient(c); setEditName(c.name); setEditGoal(c.goal); }}
+                              style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 14px", color: "#aaa", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                              ✏️ Edit
+                            </button>
+                            <button onClick={() => setConfirmRemove(c)}
+                              style={{ background: "none", border: "1px solid #f87171", borderRadius: 8, padding: "6px 14px", color: "#f87171", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                              🗑 Remove
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1616,7 +1699,8 @@ export default function App() {
                 {checkins.length === 0 ? (
                   <p style={{ color: "#555", fontSize: 14 }}>No check-ins yet.</p>
                 ) : checkins.map(c => (
-                  <div key={c.id} style={{ background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div key={c.id} className="hover-card" onClick={() => openReview(c)}
+                    style={{ background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 10, padding: "16px 18px", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
                     <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                       <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${accent}, #e07b00)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#000" }}>{c.avatar}</div>
                       <div>
@@ -1624,9 +1708,12 @@ export default function App() {
                         <div style={{ color: "#555", fontSize: 12 }}>Week {c.week} · {c.goal}</div>
                       </div>
                     </div>
-                    <span style={{ background: c.status === "approved" ? "#1e3a1e" : "#1a1200", color: c.status === "approved" ? "#4ade80" : accent, fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 600 }}>
-                      {c.status === "approved" ? "✓ Reviewed" : "Pending"}
-                    </span>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ background: c.status === "approved" ? "#1e3a1e" : "#1a1200", color: c.status === "approved" ? "#4ade80" : accent, fontSize: 11, padding: "4px 10px", borderRadius: 20, fontWeight: 600 }}>
+                        {c.status === "approved" ? "✓ Reviewed" : "Pending"}
+                      </span>
+                      <span style={{ color: "#555", fontSize: 11 }}>View →</span>
+                    </div>
                   </div>
                 ))}
               </div>
