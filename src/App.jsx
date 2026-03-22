@@ -329,8 +329,7 @@ export default function App() {
   }
 
   async function handleClientSubmit() {
-    // Find or create client by name — always query Supabase directly
-    // so this works on the public form when clients array is empty
+    // Find or create client — query Supabase directly so it works on public form
     let clientId = null;
     let coachEmailForNotification = "";
 
@@ -340,9 +339,12 @@ export default function App() {
       .ilike("name", clientForm.name)
       .limit(1);
 
+    console.log("Existing clients found:", existingClients);
+
     if (existingClients && existingClients.length > 0) {
       clientId = existingClients[0].id;
       coachEmailForNotification = existingClients[0].coach_email || "";
+      console.log("Coach email found:", coachEmailForNotification);
     } else {
       const { data } = await supabase.from("clients").insert({
         coach_id: user?.id || "public",
@@ -350,6 +352,7 @@ export default function App() {
         goal: clientForm.goal
       }).select().single();
       if (data) clientId = data.id;
+      console.log("New client created, no coach email");
     }
 
     const { data } = await supabase.from("checkins").insert({
@@ -379,10 +382,11 @@ export default function App() {
         submittedAt: "Just now"
       }, ...prev]);
       setFormSubmitted(true);
-      // Notify coach by email using coachEmailForNotification fetched above
+      // Notify coach by email
       try {
+        console.log("Sending coach email to:", coachEmailForNotification);
         if (coachEmailForNotification) {
-          await fetch("/api/send-email", {
+          const emailRes = await fetch("/api/send-email", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -399,6 +403,10 @@ export default function App() {
               }
             })
           });
+          const emailData = await emailRes.json();
+          console.log("Email API response:", JSON.stringify(emailData));
+        } else {
+          console.log("No coach email found, skipping notification");
         }
       } catch(e) { console.error("Email error:", e); }
     }
