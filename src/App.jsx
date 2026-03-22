@@ -329,11 +329,20 @@ export default function App() {
   }
 
   async function handleClientSubmit() {
-    // Find or create client by name
+    // Find or create client by name — always query Supabase directly
+    // so this works on the public form when clients array is empty
     let clientId = null;
-    const existing = clients.find(c => c.name.toLowerCase() === clientForm.name.toLowerCase());
-    if (existing) {
-      clientId = existing.id;
+    let coachEmailForNotification = "";
+
+    const { data: existingClients } = await supabase
+      .from("clients")
+      .select("id, coach_email")
+      .ilike("name", clientForm.name)
+      .limit(1);
+
+    if (existingClients && existingClients.length > 0) {
+      clientId = existingClients[0].id;
+      coachEmailForNotification = existingClients[0].coach_email || "";
     } else {
       const { data } = await supabase.from("clients").insert({
         coach_id: user?.id || "public",
@@ -370,18 +379,16 @@ export default function App() {
         submittedAt: "Just now"
       }, ...prev]);
       setFormSubmitted(true);
-      // Notify coach by email - fetch coach_email from client record
+      // Notify coach by email using coachEmailForNotification fetched above
       try {
-        const clientRecord = await supabase.from("clients").select("coach_email, email").eq("id", clientId).single();
-        const coachEmail = clientRecord?.data?.coach_email || "";
-        if (coachEmail) {
+        if (coachEmailForNotification) {
           await fetch("/api/send-email", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               type: "new-checkin",
               data: {
-                coachEmail,
+                coachEmail: coachEmailForNotification,
                 clientName: clientForm.name,
                 weight: clientForm.weight,
                 adherence: clientForm.adherence,
