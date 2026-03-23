@@ -1852,9 +1852,17 @@ export default function App() {
                 <div style={{ ...card, padding: 24, marginBottom: 20, background: "linear-gradient(135deg, #1a1200, #161616)", borderColor: "#2a2000" }}>
                   <h3 style={{ color: accent, fontSize: 13, fontWeight: 700, margin: "0 0 8px" }}>Client Check-in Form</h3>
                   <p style={{ color: "#777", fontSize: 12, lineHeight: 1.6, margin: "0 0 16px" }}>Share this link with your clients.</p>
-                  <div style={{ background: "#0d0d0d", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#555", fontFamily: "monospace", marginBottom: 12, wordBreak: "break-all" }}>
+                  <div style={{ background: "#0d0d0d", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#555", fontFamily: "monospace", marginBottom: 8, wordBreak: "break-all" }}>
                     {window.location.origin}/?checkin=true
                   </div>
+                  <button onClick={() => {
+                    navigator.clipboard.writeText(window.location.origin + "/?checkin=true");
+                    const btn = document.getElementById("copy-link-btn");
+                    if (btn) { btn.textContent = "✓ Copied!"; btn.style.color = "#4ade80"; btn.style.borderColor = "#4ade80"; setTimeout(() => { btn.textContent = "📋 Copy Link"; btn.style.color = "#aaa"; btn.style.borderColor = "#333"; }, 2000); }
+                  }} id="copy-link-btn"
+                    style={{ width: "100%", background: "none", border: "1px solid #333", borderRadius: 8, padding: "8px", color: "#aaa", cursor: "pointer", fontSize: 12, fontFamily: "inherit", marginBottom: 8 }}>
+                    📋 Copy Link
+                  </button>
                   <button className="cta-btn" onClick={() => setView("checkin")}
                     style={{ width: "100%", background: accent, color: "#000", border: "none", borderRadius: 8, padding: "11px", fontWeight: 700, cursor: "pointer", fontSize: 13, fontFamily: "inherit", transition: "background .15s" }}>
                     Preview Client Form →
