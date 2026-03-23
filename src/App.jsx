@@ -218,6 +218,8 @@ export default function App() {
   const [savedSettings, setSavedSettings] = useState(false);
   const [coachBio, setCoachBio] = useState("");
   const [coachTitle, setCoachTitle] = useState("");
+  const [automationClients, setAutomationClients] = useState([]);
+  const [savingAutomation, setSavingAutomation] = useState(null);
   const [helpMessages, setHelpMessages] = useState([{ role: "assistant", content: "Hi! I'm your Akeema assistant 👋 I can help you navigate the app, troubleshoot issues, or answer questions about your account. What do you need help with?" }]);
   const [helpInput, setHelpInput] = useState("");
   const [helpLoading, setHelpLoading] = useState(false);
@@ -1144,8 +1146,8 @@ export default function App() {
 
   // Settings page
   if (view === "settings") {
-    const tabs = ["general", "account", "billing", "privacy", "help"];
-    const tabLabels = { general: "General", account: "Account", billing: "Billing", privacy: "Privacy", help: "Help & Support" };
+    const tabs = ["general", "account", "billing", "automations", "privacy", "help"];
+    const tabLabels = { general: "General", account: "Account", billing: "Billing", automations: "Automations", privacy: "Privacy", help: "Help & Support" };
 
     return (
       <div style={{ background: "#0d0d0d", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
@@ -1186,7 +1188,7 @@ export default function App() {
           {tabs.map(tab => (
             <button key={tab} onClick={() => setSettingsTab(tab)}
               style={{ flexShrink: 0, padding: "12px 14px", background: "none", border: "none", borderBottom: settingsTab === tab ? "2px solid #f5a623" : "2px solid transparent", color: settingsTab === tab ? "#fff" : "#666", cursor: "pointer", fontSize: 13, fontFamily: "inherit", whiteSpace: "nowrap" }}>
-              {tab === "help" ? "💬 " : ""}{tabLabels[tab]}
+              {tab === "help" ? "💬 " : tab === "automations" ? "⚡ " : ""}{tabLabels[tab]}
             </button>
           ))}
         </div>
@@ -1460,6 +1462,96 @@ export default function App() {
                   </div>
                 </div>
 
+              </div>
+            )}
+
+
+            {/* AUTOMATIONS TAB */}
+            {settingsTab === "automations" && (
+              <div>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Automations</h2>
+                <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Set weekly check-in reminders for each client. They'll receive an email with their check-in link automatically.</p>
+
+                {clients.filter(c => c.email).length === 0 && (
+                  <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20, textAlign: "center" }}>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>📧</div>
+                    <p style={{ color: "#555", fontSize: 14, margin: "0 0 8px" }}>No clients with email addresses found.</p>
+                    <p style={{ color: "#444", fontSize: 13, margin: 0 }}>Add client emails in the Active Clients section to enable automated reminders.</p>
+                  </div>
+                )}
+
+                {clients.filter(c => c.email).map(client => (
+                  <div key={client.id} style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e07b00)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#000" }}>
+                          {client.name.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>{client.name}</div>
+                          <div style={{ color: "#555", fontSize: 12 }}>{client.email}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ color: "#555", fontSize: 12 }}>Reminders</span>
+                        <div
+                          onClick={async () => {
+                            const newVal = !client.reminders_enabled;
+                            await supabase.from("clients").update({ reminders_enabled: newVal }).eq("id", client.id);
+                            setClients(prev => prev.map(c => c.id === client.id ? { ...c, reminders_enabled: newVal } : c));
+                          }}
+                          style={{ width: 44, height: 24, background: client.reminders_enabled ? "#f5a623" : "#2a2a2a", borderRadius: 12, position: "relative", cursor: "pointer", transition: "background .2s" }}>
+                          <div style={{ width: 18, height: 18, background: "#fff", borderRadius: "50%", position: "absolute", top: 3, left: client.reminders_enabled ? 23 : 3, transition: "left .2s" }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {client.reminders_enabled && (
+                      <div style={{ borderTop: "1px solid #222", paddingTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 12, alignItems: "end" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, color: "#666", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Send Day</label>
+                          <select
+                            value={client.reminder_day || "sunday"}
+                            onChange={e => setClients(prev => prev.map(c => c.id === client.id ? { ...c, reminder_day: e.target.value } : c))}
+                            style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, fontFamily: "inherit" }}>
+                            {["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].map(d => (
+                              <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, color: "#666", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Send Time (UTC)</label>
+                          <select
+                            value={client.reminder_time || "09:00"}
+                            onChange={e => setClients(prev => prev.map(c => c.id === client.id ? { ...c, reminder_time: e.target.value } : c))}
+                            style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, fontFamily: "inherit" }}>
+                            {["06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"].map(t => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            setSavingAutomation(client.id);
+                            await supabase.from("clients").update({
+                              reminder_day: client.reminder_day || "sunday",
+                              reminder_time: client.reminder_time || "09:00"
+                            }).eq("id", client.id);
+                            setTimeout(() => setSavingAutomation(null), 1500);
+                          }}
+                          style={{ background: savingAutomation === client.id ? "#1e3a1e" : "#f5a623", color: savingAutomation === client.id ? "#4ade80" : "#000", border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 700, cursor: "pointer", fontSize: 12, fontFamily: "inherit", whiteSpace: "nowrap" }}>
+                          {savingAutomation === client.id ? "✓ Saved!" : "Save"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 20, marginTop: 8 }}>
+                  <p style={{ color: "#555", fontSize: 13, margin: 0, lineHeight: 1.6 }}>
+                    ⚡ Reminders are sent automatically based on the schedule above. Clients receive an email with their personal check-in link. Only clients with email addresses can receive reminders.
+                  </p>
+                </div>
               </div>
             )}
 
