@@ -593,7 +593,7 @@ export default function App() {
                     <label style={{ fontSize: 12, color: "#999", textTransform: "uppercase", letterSpacing: 1 }}>Training Adherence</label>
                     <span style={{ fontSize: 14, fontWeight: 700, color: "#f5a623" }}>{clientForm.adherence}%</span>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+                  <div className="adherence-5" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
                     {[0, 25, 50, 75, 100].map(val => (
                       <button key={val} type="button" onClick={() => setClientForm(p => ({ ...p, adherence: val }))}
                         style={{ padding: "10px 0", borderRadius: 8, border: `1px solid ${clientForm.adherence === val ? "#f5a623" : "#333"}`, background: clientForm.adherence === val ? "#1e1200" : "#1a1a1a", color: clientForm.adherence === val ? "#f5a623" : "#666", fontWeight: clientForm.adherence === val ? 700 : 400, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
@@ -717,7 +717,7 @@ export default function App() {
                     <label style={{ fontSize: 12, color: "#999", textTransform: "uppercase", letterSpacing: 1 }}>Training Adherence</label>
                     <span style={{ fontSize: 14, fontWeight: 700, color: accent }}>{clientForm.adherence}%</span>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+                  <div className="adherence-5" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
                     {[0, 25, 50, 75, 100].map(val => (
                       <button key={val} type="button" onClick={() => setClientForm(p => ({ ...p, adherence: val }))}
                         style={{ padding: "10px 0", borderRadius: 8, border: `1px solid ${clientForm.adherence === val ? accent : "#333"}`, background: clientForm.adherence === val ? "#1e1200" : "#1a1a1a", color: clientForm.adherence === val ? accent : "#666", fontWeight: clientForm.adherence === val ? 700 : 400, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
@@ -783,7 +783,7 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+          <div className="review-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
             {[
               { label: "Weight Change", value: `${weightChange > 0 ? "+" : ""}${weightChange.toFixed(1)} lbs`, color: weightChange < 0 && c.goal === "Fat loss" ? green : weightChange > 0 && c.goal === "Fat loss" ? red : "#fff" },
               { label: "Sleep", value: `${c.sleep}/10`, color: c.sleep >= 7 ? green : c.sleep >= 5 ? accent : red },
@@ -1522,34 +1522,50 @@ export default function App() {
   const approvedCheckins = checkins.filter(c => c.status === "approved");
 
   return (
-    <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", overflowX: "hidden", width: "100%" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap');
         * { box-sizing: border-box; }
+        html, body, #root { overflow-x: hidden; max-width: 100%; }
         @keyframes fadeUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:none } }
         .hover-card:hover { border-color: #3a3a3a !important; transform: translateY(-1px); transition: all .15s ease; }
         .cta-btn:hover { background: #e09920 !important; }
+        @media (max-width: 768px) {
+          .stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+          .dash-layout { grid-template-columns: 1fr !important; }
+          .trial-banner { flex-direction: column !important; align-items: flex-start !important; }
+          .trial-banner button { width: 100% !important; }
+          .dash-padding { padding: 20px 16px !important; }
+          .dash-header-pad { padding: 14px 16px !important; }
+          .dash-title { font-size: 24px !important; }
+          .review-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .adherence-5 { grid-template-columns: repeat(3, 1fr) !important; }
+        }
+        @media (max-width: 480px) {
+          .stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .dash-title { font-size: 22px !important; }
+        }
       `}</style>
 
-      <div style={{ borderBottom: "1px solid #1e1e1e", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ borderBottom: "1px solid #1e1e1e", className="dash-header-pad" style={{ padding: "20px 40px", borderBottom: "1px solid #1e1e1e", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 32, height: 32, background: accent, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
           <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ color: "#555", fontSize: 13 }}>{user.firstName || user.emailAddresses[0]?.emailAddress}</span>
+          <span style={{ color: "#555", fontSize: 13, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "inline-block" }}>{user.firstName || user.emailAddresses[0]?.emailAddress}</span>
           <button onClick={() => setView("settings")} style={{ background: view === "settings" ? "#1e1e1e" : "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: view === "settings" ? "#fff" : "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>⚙ Settings</button>
           <button onClick={() => signOut()} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Sign out</button>
         </div>
       </div>
 
-      <div style={{ padding: "40px", width: "100%" }}>
+      <div className="dash-padding" style={{ padding: "40px", width: "100%", overflowX: "hidden" }}>
         {loading ? (
           <div style={{ color: "#555", fontSize: 14, textAlign: "center", paddingTop: 60 }}>Loading your dashboard...</div>
         ) : (
           <>
             {/* Trial Banner */}
-            <div style={{ background: "linear-gradient(135deg, #1a1200, #1a0d00)", border: "1px solid #3a2800", borderRadius: 12, padding: "16px 24px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div className="trial-banner" style={{ background: "linear-gradient(135deg, #1a1200, #1a0d00)", border: "1px solid #3a2800", borderRadius: 12, padding: "16px 24px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
               <div>
                 <span style={{ color: accent, fontWeight: 700, fontSize: 14 }}>🎉 7-day free trial active</span>
                 <span style={{ color: "#666", fontSize: 13, marginLeft: 12 }}>Upgrade anytime to keep full access at $19.99/month</span>
@@ -1561,7 +1577,7 @@ export default function App() {
             </div>
 
             <div style={{ marginBottom: 40, animation: "fadeUp .4s ease" }}>
-              <h1 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 36, margin: "0 0 6px" }}>
+              <h1 className="dash-title" style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 36, margin: "0 0 6px" }}>
                 Good morning, {user.firstName || "Coach"} 👋
               </h1>
               <p style={{ color: "#555", fontSize: 15, margin: 0 }}>
@@ -1571,7 +1587,7 @@ export default function App() {
               </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 40 }}>
+            <div className="stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 40 }}>
               {[
                 { label: "Active Clients", value: clients.length, icon: "👥", filter: "clients" },
                 { label: "Pending Reviews", value: pendingCheckins.length, icon: "⏳", highlight: pendingCheckins.length > 0, filter: "pending" },
@@ -1757,7 +1773,7 @@ export default function App() {
               </div>
             )}
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24 }}>
+            <div className="dash-layout" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24 }}>
               <div>
                 <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
                   Pending Check-ins
