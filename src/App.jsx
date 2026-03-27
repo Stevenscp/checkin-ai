@@ -1490,6 +1490,11 @@ export default function App() {
                         <div>
                           <div style={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>{client.name}</div>
                           <div style={{ color: "#555", fontSize: 12 }}>{client.email}</div>
+                          {client.last_reminded_at && (
+                            <div style={{ color: "#444", fontSize: 11, marginTop: 2 }}>
+                              Last reminded: {new Date(client.last_reminded_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1539,7 +1544,7 @@ export default function App() {
 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 20, marginTop: 8 }}>
                   <p style={{ color: "#555", fontSize: 13, margin: 0, lineHeight: 1.6 }}>
-                    ⚡ Reminders are sent automatically based on the schedule above. Clients receive an email with their personal check-in link. Only clients with email addresses can receive reminders.
+                    ⚡ Reminders are sent automatically on the scheduled day at 9:00 AM UTC. Clients who have already submitted a check-in that week will not receive a reminder. Only clients with email addresses can receive reminders.
                   </p>
                 </div>
               </div>

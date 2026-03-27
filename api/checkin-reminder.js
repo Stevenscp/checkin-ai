@@ -18,24 +18,43 @@ export default async function handler(req, res) {
   try {
     const now = new Date();
     const currentDay = DAYS[now.getUTCDay()];
-    const currentHour = String(now.getUTCHours()).padStart(2, '0') + ':00';
 
-    // Find all clients with reminders enabled for this day and time
+    // Get all clients with reminders enabled for today
     const { data: clients, error } = await supabase
       .from('clients')
-      .select('*, coach_email')
+      .select('*')
       .eq('reminders_enabled', true)
       .eq('reminder_day', currentDay)
-      .eq('reminder_time', currentHour)
       .not('email', 'is', null);
 
     if (error) throw error;
     if (!clients || clients.length === 0) {
-      return res.status(200).json({ message: 'No reminders due', day: currentDay, hour: currentHour });
+      return res.status(200).json({ message: 'No reminders due', day: currentDay });
     }
 
+    // Get start of current week (Monday)
+    const weekStart = new Date(now);
+    weekStart.setUTCDate(now.getUTCDate() - now.getUTCDay());
+    weekStart.setUTCHours(0, 0, 0, 0);
+
     let sent = 0;
+    let skipped = 0;
+
     for (const client of clients) {
+      // Check if client already submitted a check-in this week
+      const { data: recentCheckins } = await supabase
+        .from('checkins')
+        .select('id')
+        .eq('client_id', client.id)
+        .gte('created_at', weekStart.toISOString())
+        .limit(1);
+
+      if (recentCheckins && recentCheckins.length > 0) {
+        skipped++;
+        continue; // Already checked in this week, skip
+      }
+
+      // Send reminder email
       await resend.emails.send({
         from: FROM,
         to: client.email,
@@ -62,10 +81,17 @@ export default async function handler(req, res) {
           </div>
         `
       });
+
+      // Update last_reminded_at
+      await supabase
+        .from('clients')
+        .update({ last_reminded_at: now.toISOString() })
+        .eq('id', client.id);
+
       sent++;
     }
 
-    res.status(200).json({ success: true, sent, day: currentDay, hour: currentHour });
+    res.status(200).json({ success: true, sent, skipped, day: currentDay });
   } catch (error) {
     console.error('Reminder error:', error.message);
     res.status(500).json({ error: error.message });
