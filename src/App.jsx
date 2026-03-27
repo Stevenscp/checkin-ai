@@ -1507,7 +1507,7 @@ export default function App() {
                     </div>
 
                     {client.reminders_enabled && (
-                      <div style={{ borderTop: "1px solid #222", paddingTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 12, alignItems: "end" }}>
+                      <div style={{ borderTop: "1px solid #222", paddingTop: 16, display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "end" }}>
                         <div>
                           <label style={{ display: "block", fontSize: 11, color: "#666", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Send Day</label>
                           <select
@@ -1518,24 +1518,14 @@ export default function App() {
                               <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
                             ))}
                           </select>
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: 11, color: "#666", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Send Time (UTC)</label>
-                          <select
-                            value={client.reminder_time || "09:00"}
-                            onChange={e => setClients(prev => prev.map(c => c.id === client.id ? { ...c, reminder_time: e.target.value } : c))}
-                            style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, fontFamily: "inherit" }}>
-                            {["06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"].map(t => (
-                              <option key={t} value={t}>{t}</option>
-                            ))}
-                          </select>
+                          <p style={{ color: "#444", fontSize: 11, margin: "4px 0 0" }}>Sent at 9:00 AM UTC</p>
                         </div>
                         <button
                           onClick={async () => {
                             setSavingAutomation(client.id);
                             await supabase.from("clients").update({
                               reminder_day: client.reminder_day || "sunday",
-                              reminder_time: client.reminder_time || "09:00"
+                              reminder_time: "09:00"
                             }).eq("id", client.id);
                             setTimeout(() => setSavingAutomation(null), 1500);
                           }}
