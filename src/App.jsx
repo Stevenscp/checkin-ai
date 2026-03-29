@@ -444,8 +444,9 @@ export default function App() {
   }
 
   async function saveClientEdit(clientId) {
-    await supabase.from("clients").update({ name: editName, goal: editGoal, email: editEmail || null }).eq("id", clientId);
-    setClients(prev => prev.map(c => c.id === clientId ? { ...c, name: editName, goal: editGoal, email: editEmail || null } : c));
+    const coachEmail = user.emailAddresses?.[0]?.emailAddress || null;
+    await supabase.from("clients").update({ name: editName, goal: editGoal, email: editEmail || null, coach_email: coachEmail }).eq("id", clientId);
+    setClients(prev => prev.map(c => c.id === clientId ? { ...c, name: editName, goal: editGoal, email: editEmail || null, coach_email: coachEmail } : c));
     setEditingClient(null);
   }
 
@@ -1491,11 +1492,11 @@ export default function App() {
                         <div>
                           <div style={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>{client.name}</div>
                           <div style={{ color: "#555", fontSize: 12 }}>{client.email}</div>
-                          {client.last_reminded_at && (
-                            <div style={{ color: "#444", fontSize: 11, marginTop: 2 }}>
-                              Last reminded: {new Date(client.last_reminded_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} at {new Date(client.last_reminded_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
-                            </div>
-                          )}
+                          <div style={{ color: "#444", fontSize: 11, marginTop: 2 }}>
+                            {client.last_reminded_at
+                              ? `Last reminded: ${new Date(client.last_reminded_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} at ${new Date(client.last_reminded_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`
+                              : client.reminders_enabled ? "Reminder scheduled — not yet sent" : ""}
+                          </div>
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1524,7 +1525,7 @@ export default function App() {
                               <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
                             ))}
                           </select>
-                          <p style={{ color: "#444", fontSize: 11, margin: "4px 0 0" }}>Sent at 9:00 AM UTC</p>
+                          <p style={{ color: "#444", fontSize: 11, margin: "4px 0 0" }}>Reminders send at 9:00 AM EST on the selected day</p>
                         </div>
                         <button
                           onClick={async () => {
