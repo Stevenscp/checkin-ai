@@ -32,26 +32,31 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'No reminders due', day: currentDay });
     }
 
-    // Get start of current week (Monday)
-    const weekStart = new Date(now);
-    weekStart.setUTCDate(now.getUTCDate() - now.getUTCDay());
-    weekStart.setUTCHours(0, 0, 0, 0);
+    // Check if already reminded in the last 6 days to prevent duplicates
+    const sixDaysAgo = new Date(now);
+    sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
 
     let sent = 0;
     let skipped = 0;
 
     for (const client of clients) {
-      // Check if client already submitted a check-in this week
+      // Skip if reminded in the last 6 days
+      if (client.last_reminded_at && new Date(client.last_reminded_at) > sixDaysAgo) {
+        skipped++;
+        continue;
+      }
+
+      // Skip if client already submitted a check-in in the last 6 days
       const { data: recentCheckins } = await supabase
         .from('checkins')
         .select('id')
         .eq('client_id', client.id)
-        .gte('created_at', weekStart.toISOString())
+        .gte('created_at', sixDaysAgo.toISOString())
         .limit(1);
 
       if (recentCheckins && recentCheckins.length > 0) {
         skipped++;
-        continue; // Already checked in this week, skip
+        continue;
       }
 
       // Send reminder email

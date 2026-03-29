@@ -1494,7 +1494,7 @@ export default function App() {
                           <div style={{ color: "#555", fontSize: 12 }}>{client.email}</div>
                           <div style={{ color: "#444", fontSize: 11, marginTop: 2 }}>
                             {client.last_reminded_at
-                              ? `Last reminded: ${new Date(client.last_reminded_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })} at ${new Date(client.last_reminded_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })}`
+                              ? `Last reminded: ${new Date(client.last_reminded_at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true })}`
                               : client.reminders_enabled ? "Reminder scheduled — not yet sent" : ""}
                           </div>
                         </div>
