@@ -213,6 +213,7 @@ export default function App() {
   const [editingClient, setEditingClient] = useState(null);
   const [editName, setEditName] = useState("");
   const [editGoal, setEditGoal] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [confirmRemove, setConfirmRemove] = useState(null);
   const [settingsTab, setSettingsTab] = useState("general");
   const [savedSettings, setSavedSettings] = useState(false);
@@ -443,8 +444,8 @@ export default function App() {
   }
 
   async function saveClientEdit(clientId) {
-    await supabase.from("clients").update({ name: editName, goal: editGoal }).eq("id", clientId);
-    setClients(prev => prev.map(c => c.id === clientId ? { ...c, name: editName, goal: editGoal } : c));
+    await supabase.from("clients").update({ name: editName, goal: editGoal, email: editEmail || null }).eq("id", clientId);
+    setClients(prev => prev.map(c => c.id === clientId ? { ...c, name: editName, goal: editGoal, email: editEmail || null } : c));
     setEditingClient(null);
   }
 
@@ -1492,7 +1493,7 @@ export default function App() {
                           <div style={{ color: "#555", fontSize: 12 }}>{client.email}</div>
                           {client.last_reminded_at && (
                             <div style={{ color: "#444", fontSize: 11, marginTop: 2 }}>
-                              Last reminded: {new Date(client.last_reminded_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                              Last reminded: {new Date(client.last_reminded_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} at {new Date(client.last_reminded_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
                             </div>
                           )}
                         </div>
@@ -1725,7 +1726,7 @@ export default function App() {
                       {editingClient?.id === c.id ? (
                         // Edit mode
                         <div>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                             <div>
                               <label style={{ display: "block", fontSize: 11, color: "#666", marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>Name</label>
                               <input value={editName} onChange={e => setEditName(e.target.value)}
@@ -1738,6 +1739,11 @@ export default function App() {
                                 {["Fat loss", "Muscle gain", "Strength", "Endurance", "General fitness"].map(g => <option key={g}>{g}</option>)}
                               </select>
                             </div>
+                          </div>
+                          <div style={{ marginBottom: 12 }}>
+                            <label style={{ display: "block", fontSize: 11, color: "#666", marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>Email</label>
+                            <input value={editEmail} onChange={e => setEditEmail(e.target.value)} placeholder="client@email.com"
+                              style={{ width: "100%", background: "#111", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, fontFamily: "inherit" }} />
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
                             <button onClick={() => saveClientEdit(c.id)}
@@ -1763,7 +1769,7 @@ export default function App() {
                             </div>
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <button onClick={() => { setEditingClient(c); setEditName(c.name); setEditGoal(c.goal); }}
+                            <button onClick={() => { setEditingClient(c); setEditName(c.name); setEditGoal(c.goal); setEditEmail(c.email || ""); }}
                               style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 14px", color: "#aaa", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
                               ✏️ Edit
                             </button>
