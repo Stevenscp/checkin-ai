@@ -210,7 +210,6 @@ export default function App() {
   const [upgrading, setUpgrading] = useState(false);
   const [view, setView] = useState("dashboard");
   const [activeFilter, setActiveFilter] = useState(null);
-  const [selectedClient, setSelectedClient] = useState(null);
   const [editingClient, setEditingClient] = useState(null);
   const [editName, setEditName] = useState("");
   const [editGoal, setEditGoal] = useState("");
@@ -874,168 +873,6 @@ export default function App() {
   }
 
 
-
-
-  // ── Progress Charts View ─────────────────────────────────────────────────
-  if (view === "progress" && selectedClient) {
-    const clientCheckins = checkins
-      .filter(c => c.client_id === selectedClient.id)
-      .sort((a, b) => (a.week_number || a.week || 0) - (b.week_number || b.week || 0));
-
-    const approved = clientCheckins.filter(c => c.status === "approved");
-    const weeks = approved.map(c => `W${c.week_number || c.week}`);
-    const weights = approved.map(c => parseFloat(c.weight) || 0);
-    const adherenceData = approved.map(c => parseFloat(c.adherence) || 0);
-    const sleepData = approved.map(c => parseFloat(c.sleep) || 0);
-    const energyData = approved.map(c => parseFloat(c.energy) || 0);
-    const stressData = approved.map(c => parseFloat(c.stress) || 0);
-
-    const totalWeightChange = weights.length >= 2 ? (weights[weights.length-1] - weights[0]).toFixed(1) : 0;
-    const avgAdherence = adherenceData.length ? Math.round(adherenceData.reduce((a,b) => a+b,0) / adherenceData.length) : 0;
-    const avgSleep = sleepData.length ? (sleepData.reduce((a,b) => a+b,0) / sleepData.length).toFixed(1) : 0;
-
-    function MiniChart({ data, labels, color, height = 80 }) {
-      if (data.length < 2) return (
-        <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ color: "#444", fontSize: 12 }}>Need 2+ check-ins</span>
-        </div>
-      );
-      const max = Math.max(...data);
-      const min = Math.min(...data);
-      const range = max - min || 1;
-      const w = 100;
-      const h = height;
-      const pts = data.map((v, i) => {
-        const x = (i / (data.length - 1)) * w;
-        const y = h - ((v - min) / range) * (h - 8) - 4;
-        return `${x},${y}`;
-      }).join(" ");
-      const areaPoints = `0,${h} ${pts} ${w},${h}`;
-      return (
-        <div>
-          <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height, overflow: "visible" }}>
-            <defs>
-              <linearGradient id={`g${color.replace("#","")}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity="0.2"/>
-                <stop offset="100%" stopColor={color} stopOpacity="0"/>
-              </linearGradient>
-            </defs>
-            <polygon points={areaPoints} fill={`url(#g${color.replace("#","")})`}/>
-            <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            {data.map((v, i) => {
-              const x = (i / (data.length - 1)) * w;
-              const y = h - ((v - min) / range) * (h - 8) - 4;
-              return <circle key={i} cx={x} cy={y} r="3" fill={color}/>;
-            })}
-          </svg>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-            {labels.map((l, i) => <span key={i} style={{ fontSize: 9, color: "#444" }}>{l}</span>)}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", overflowX: "hidden" }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap'); * { box-sizing: border-box; }`}</style>
-
-        {/* Header */}
-        <div style={{ borderBottom: "1px solid #1e1e1e", padding: "16px clamp(16px,4vw,40px)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <button onClick={() => setView("dashboard")} style={{ background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 13, padding: 0 }}>← Dashboard</button>
-            <span style={{ color: "#333" }}>/</span>
-            <span style={{ color: "#fff", fontSize: 13 }}>{selectedClient.name}</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, background: accent, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
-            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
-          </div>
-        </div>
-
-        <div style={{ maxWidth: 860, margin: "0 auto", padding: "clamp(24px,4vw,40px) clamp(16px,4vw,40px)" }}>
-
-          {/* Client Header */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
-            <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, ${accent}, #e07b00)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 20, color: "#000", flexShrink: 0 }}>
-              {selectedClient.name.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase()}
-            </div>
-            <div>
-              <h1 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 28, margin: "0 0 4px" }}>{selectedClient.name}</h1>
-              <p style={{ color: "#555", fontSize: 14, margin: 0 }}>{selectedClient.goal} · {approved.length} approved check-in{approved.length !== 1 ? "s" : ""}</p>
-            </div>
-          </div>
-
-          {approved.length === 0 ? (
-            <div style={{ ...card, padding: 60, textAlign: "center" }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>📊</div>
-              <p style={{ color: "#555", fontSize: 15, margin: "0 0 8px" }}>No approved check-ins yet.</p>
-              <p style={{ color: "#444", fontSize: 13 }}>Progress charts will appear once you approve check-ins for this client.</p>
-            </div>
-          ) : (
-            <>
-              {/* Summary Stats */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
-                {[
-                  { label: "Total Weight Change", value: `${totalWeightChange > 0 ? "+" : ""}${totalWeightChange} lbs`, color: totalWeightChange < 0 ? green : totalWeightChange > 0 ? red : "#fff" },
-                  { label: "Avg Adherence", value: `${avgAdherence}%`, color: avgAdherence >= 80 ? green : avgAdherence >= 60 ? accent : red },
-                  { label: "Avg Sleep", value: `${avgSleep}/10`, color: avgSleep >= 7 ? green : accent },
-                ].map(s => (
-                  <div key={s.label} style={{ ...card, padding: "18px 20px" }}>
-                    <div style={{ color: "#555", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{s.label}</div>
-                    <div style={{ color: s.color, fontSize: 24, fontWeight: 700 }}>{s.value}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Charts Grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20, marginBottom: 28 }}>
-                {[
-                  { title: "Weight", unit: "lbs", data: weights, color: accent, latest: weights[weights.length-1] },
-                  { title: "Adherence", unit: "%", data: adherenceData, color: "#3b82f6", latest: adherenceData[adherenceData.length-1] },
-                  { title: "Sleep Quality", unit: "/10", data: sleepData, color: "#818cf8", latest: sleepData[sleepData.length-1] },
-                  { title: "Energy", unit: "/10", data: energyData, color: green, latest: energyData[energyData.length-1] },
-                  { title: "Stress", unit: "/10", data: stressData, color: red, latest: stressData[stressData.length-1] },
-                ].map(chart => {
-                  const change = chart.data.length >= 2 ? (chart.data[chart.data.length-1] - chart.data[chart.data.length-2]).toFixed(1) : null;
-                  const changeColor = change > 0 ? (chart.title === "Stress" ? red : green) : change < 0 ? (chart.title === "Stress" ? green : red) : "#555";
-                  return (
-                    <div key={chart.title} style={{ ...card, padding: 20 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
-                        <span style={{ color: "#555", fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}>{chart.title}</span>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                          <span style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>{chart.latest}{chart.unit}</span>
-                          {change !== null && <span style={{ fontSize: 11, color: changeColor }}>{change > 0 ? "+" : ""}{change}{chart.unit}</span>}
-                        </div>
-                      </div>
-                      <MiniChart data={chart.data} labels={weeks} color={chart.color} />
-                    </div>
-                  );
-                })}
-
-                {/* Check-in History */}
-                <div style={{ ...card, padding: 20 }}>
-                  <div style={{ color: "#555", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Check-in History</div>
-                  <div style={{ maxHeight: 200, overflowY: "auto" }}>
-                    {[...approved].reverse().map((c, i) => (
-                      <div key={c.id} onClick={() => { setSelectedCheckin({...c, clientName: selectedClient.name, avatar: selectedClient.name.split(" ").map(n=>n[0]).join("").slice(0,2), goal: selectedClient.goal, week: c.week_number || c.week, lastWeight: c.last_weight}); setAnalyzing(false); setAnalysisText(c.analysis || ""); setCoachNote(c.coach_note || ""); setApproved(true); setView("review"); }}
-                        className="hover-card"
-                        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 8px", borderRadius: 8, borderBottom: i < approved.length - 1 ? "1px solid #1e1e1e" : "none", cursor: "pointer" }}>
-                        <div>
-                          <div style={{ color: "#ccc", fontSize: 13, fontWeight: 500 }}>Week {c.week_number || c.week}</div>
-                          <div style={{ color: "#555", fontSize: 11 }}>{c.weight} lbs · {c.adherence}% adherence</div>
-                        </div>
-                        <span style={{ color: "#555", fontSize: 11 }}>View →</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   // ── Legal / Security sub-pages ──────────────────────────────────────────
 
@@ -1933,6 +1770,10 @@ export default function App() {
                             </div>
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
+                            <button onClick={() => { setSelectedClient(c); setView("progress"); }}
+                              style={{ background: "none", border: "1px solid #3b82f6", borderRadius: 8, padding: "6px 14px", color: "#3b82f6", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                              📈 Progress
+                            </button>
                             <button onClick={() => { setEditingClient(c); setEditName(c.name); setEditGoal(c.goal); setEditEmail(c.email || ""); }}
                               style={{ background: "none", border: "1px solid #333", borderRadius: 8, padding: "6px 14px", color: "#aaa", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
                               ✏️ Edit
@@ -2130,7 +1971,7 @@ export default function App() {
                   <h3 style={{ color: "#fff", fontSize: 14, fontWeight: 700, margin: "0 0 16px" }}>Your Clients</h3>
                   {clients.length === 0 && <p style={{ color: "#555", fontSize: 13, margin: "0 0 16px" }}>No clients yet — add your first one!</p>}
                   {clients.map((cl, i) => (
-                    <div key={cl.id} onClick={() => { setSelectedClient(cl); setView("progress"); }} className="hover-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: i < clients.length - 1 ? 14 : 0, marginBottom: i < clients.length - 1 ? 14 : 0, borderBottom: i < clients.length - 1 ? "1px solid #1e1e1e" : "none", cursor: "pointer", borderRadius: 8, padding: "4px 6px", margin: i < clients.length - 1 ? "0 -6px" : "0 -6px" }}>
+                    <div key={cl.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: i < clients.length - 1 ? 14 : 0, marginBottom: i < clients.length - 1 ? 14 : 0, borderBottom: i < clients.length - 1 ? "1px solid #1e1e1e" : "none" }}>
                       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                         <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#222", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#888" }}>
                           {cl.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
@@ -2140,10 +1981,7 @@ export default function App() {
                           <div style={{ color: "#555", fontSize: 11 }}>{cl.goal}</div>
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ color: "#444", fontSize: 10 }}>📈</span>
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: green }} />
-                      </div>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: green }} />
                     </div>
                   ))}
 
