@@ -647,6 +647,8 @@ export default function App() {
           .cl-rootBox, .cl-card { background: #161616 !important; }
           .cl-headerTitle, .cl-headerSubtitle { color: #fff !important; }
           .cl-formFieldLabel { color: #999 !important; }
+          .cl-badge, [data-localization-key="badge__lastUsed"] { background: #f5a623 !important; color: #000 !important; font-weight: 700 !important; border-radius: 4px !important; padding: 2px 6px !important; }
+          .cl-formFieldLabelRow__optional, .cl-badge--primary { background: #f5a623 !important; color: #000 !important; }
           .cl-formButtonPrimary { background: #f5a623 !important; color: #000 !important; }
         `}</style>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 40 }}>
