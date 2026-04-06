@@ -208,6 +208,8 @@ export default function App() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { signOut } = useClerk();
   const [upgrading, setUpgrading] = useState(false);
+  const [coachPlan, setCoachPlan] = useState("basic");
+  const [showPricing, setShowPricing] = useState(false);
   const [view, setView] = useState("dashboard");
   const [activeFilter, setActiveFilter] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -226,7 +228,7 @@ export default function App() {
   const [helpInput, setHelpInput] = useState("");
   const [helpLoading, setHelpLoading] = useState(false);
 
-  async function handleUpgrade() {
+  async function handleUpgrade(plan = "basic") {
     setUpgrading(true);
     try {
       const res = await fetch("/api/create-checkout", {
@@ -234,7 +236,8 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user.id,
-          email: user.emailAddresses[0]?.emailAddress
+          email: user.emailAddresses[0]?.emailAddress,
+          plan
         })
       });
       const data = await res.json();
@@ -290,6 +293,14 @@ export default function App() {
   async function loadData() {
     setLoading(true);
     const coachId = user.id;
+
+    // Load coach plan
+    const { data: coachSettings } = await supabase
+      .from("coach_settings")
+      .select("plan")
+      .eq("coach_id", coachId)
+      .single();
+    if (coachSettings?.plan) setCoachPlan(coachSettings.plan);
 
     const { data: clientsData } = await supabase
       .from("clients")
@@ -1016,6 +1027,117 @@ export default function App() {
     );
   }
 
+
+  // ── Pricing Page ─────────────────────────────────────────────────────────
+  if (showPricing) {
+    const plans = [
+      {
+        name: "Basic",
+        price: "$19.99",
+        period: "/month",
+        description: "Perfect for coaches just getting started",
+        color: "#2a2a2a",
+        accentColor: "#fff",
+        features: [
+          "AI check-in analysis",
+          "Unlimited clients",
+          "Progress charts",
+          "Email notifications",
+          "Weekly reminders (9am EST)",
+          "Weekly summary email",
+          "Help & Support chat",
+        ],
+        locked: [],
+        plan: "basic",
+        current: coachPlan === "basic",
+      },
+      {
+        name: "Pro",
+        price: "$39.99",
+        period: "/month",
+        description: "For serious coaches scaling their practice",
+        color: "#1a1200",
+        accentColor: accent,
+        features: [
+          "Everything in Basic",
+          "Custom reminder times",
+          "Automated check-in forms",
+          "Priority support",
+          "Early access to new features",
+        ],
+        locked: [],
+        plan: "pro",
+        current: coachPlan === "pro",
+      }
+    ];
+
+    return (
+      <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap'); * { box-sizing: border-box; } @keyframes fadeUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:none } }`}</style>
+
+        <div style={{ borderBottom: "1px solid #1e1e1e", padding: "16px clamp(16px,4vw,40px)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 32, height: 32, background: accent, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
+            <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
+          </div>
+          <button onClick={() => setShowPricing(false)} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Back</button>
+        </div>
+
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "clamp(40px,6vw,80px) clamp(16px,4vw,40px)", animation: "fadeUp .4s ease" }}>
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <h1 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: "clamp(32px,5vw,48px)", margin: "0 0 16px" }}>Simple, transparent pricing</h1>
+            <p style={{ color: "#555", fontSize: 16, margin: 0 }}>Start free for 7 days. No credit card required.</p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
+            {plans.map(plan => (
+              <div key={plan.name} style={{ background: plan.color, border: `1px solid ${plan.current ? plan.accentColor : "#2a2a2a"}`, borderRadius: 16, padding: 32, position: "relative" }}>
+                {plan.name === "Pro" && (
+                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: accent, color: "#000", fontSize: 11, fontWeight: 700, padding: "4px 16px", borderRadius: 20, whiteSpace: "nowrap" }}>
+                    MOST POPULAR
+                  </div>
+                )}
+                {plan.current && (
+                  <div style={{ position: "absolute", top: 16, right: 16, background: "#1e3a1e", color: "#4ade80", fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 20 }}>
+                    Current Plan
+                  </div>
+                )}
+
+                <h2 style={{ color: plan.accentColor, fontSize: 22, fontWeight: 700, margin: "0 0 8px" }}>{plan.name}</h2>
+                <p style={{ color: "#555", fontSize: 13, margin: "0 0 24px" }}>{plan.description}</p>
+
+                <div style={{ marginBottom: 28 }}>
+                  <span style={{ color: "#fff", fontSize: 40, fontWeight: 700 }}>{plan.price}</span>
+                  <span style={{ color: "#555", fontSize: 14 }}>{plan.period}</span>
+                </div>
+
+                <button
+                  onClick={() => !plan.current && handleUpgrade(plan.plan)}
+                  disabled={plan.current || upgrading}
+                  style={{ width: "100%", background: plan.current ? "#1e1e1e" : plan.name === "Pro" ? accent : "#fff", color: plan.current ? "#555" : "#000", border: "none", borderRadius: 10, padding: "14px", fontWeight: 700, cursor: plan.current ? "default" : "pointer", fontSize: 15, fontFamily: "inherit", marginBottom: 28, opacity: upgrading ? 0.7 : 1 }}>
+                  {plan.current ? "Current Plan" : upgrading ? "Redirecting..." : `Get ${plan.name} →`}
+                </button>
+
+                <div style={{ borderTop: "1px solid #222", paddingTop: 24 }}>
+                  {plan.features.map(f => (
+                    <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 12 }}>
+                      <span style={{ color: plan.name === "Pro" ? accent : "#4ade80", fontSize: 14, flexShrink: 0 }}>✓</span>
+                      <span style={{ color: "#ccc", fontSize: 14 }}>{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ textAlign: "center", color: "#444", fontSize: 13, marginTop: 40 }}>
+            All plans include a 7-day free trial. Cancel anytime. Questions? Use the Help chat in your dashboard.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // ── Legal / Security sub-pages ──────────────────────────────────────────
 
   const legalViews = ["privacy-policy", "terms", "dpa", "security"];
@@ -1448,13 +1570,13 @@ export default function App() {
                 <div style={{ background: "linear-gradient(135deg, #1a1200, #161616)", border: "1px solid #3a2800", borderRadius: 12, padding: 28, marginBottom: 20 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
                     <div>
-                      <h3 style={{ color: "#f5a623", fontSize: 16, fontWeight: 700, margin: "0 0 4px" }}>Akeema Pro</h3>
-                      <p style={{ color: "#666", fontSize: 13, margin: 0 }}>$19.99 / month · 7-day free trial</p>
+                      <h3 style={{ color: "#f5a623", fontSize: 16, fontWeight: 700, margin: "0 0 4px" }}>Akeema {coachPlan === "pro" ? "Pro" : "Basic"}</h3>
+                      <p style={{ color: "#666", fontSize: 13, margin: 0 }}>{coachPlan === "pro" ? "$39.99" : "$19.99"} / month · 7-day free trial</p>
                     </div>
                     <span style={{ background: "#1e3a1e", color: "#4ade80", fontSize: 11, padding: "4px 12px", borderRadius: 20, fontWeight: 600 }}>Trial Active</span>
                   </div>
                   <div style={{ borderTop: "1px solid #2a2000", paddingTop: 20, marginBottom: 20 }}>
-                    {[["Plan", "Akeema Pro"], ["Status", "Free Trial"], ["Billing cycle", "Monthly"], ["Amount", "$19.99/month after trial"]].map(([label, val]) => (
+                    {[["Plan", coachPlan === "pro" ? "Akeema Pro" : "Akeema Basic"], ["Status", "Free Trial"], ["Billing cycle", "Monthly"], ["Amount", coachPlan === "pro" ? "$39.99/month after trial" : "$19.99/month after trial"]].map(([label, val]) => (
                       <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                         <span style={{ color: "#555", fontSize: 13 }}>{label}</span>
                         <span style={{ color: "#ccc", fontSize: 13 }}>{val}</span>
@@ -1462,8 +1584,8 @@ export default function App() {
                     ))}
                   </div>
                   <button onClick={handleUpgrade} disabled={upgrading}
-                    style={{ width: "100%", background: "#f5a623", color: "#000", border: "none", borderRadius: 8, padding: "12px", fontWeight: 700, cursor: "pointer", fontSize: 14, fontFamily: "inherit" }}>
-                    {upgrading ? "Redirecting to Stripe..." : "Manage Subscription →"}
+                    onClick={() => coachPlan !== "pro" && setShowPricing(true)} style={{ width: "100%", background: "#f5a623", color: "#000", border: "none", borderRadius: 8, padding: "12px", fontWeight: 700, cursor: "pointer", fontSize: 14, fontFamily: "inherit" }}>
+                    {coachPlan === "pro" ? "Manage Subscription →" : "View Plans →"}
                   </button>
                 </div>
 
@@ -1799,11 +1921,11 @@ export default function App() {
             <div className="trial-banner" style={{ background: "linear-gradient(135deg, #1a1200, #1a0d00)", border: "1px solid #3a2800", borderRadius: 12, padding: "16px 24px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
               <div>
                 <span style={{ color: accent, fontWeight: 700, fontSize: 14 }}>🎉 7-day free trial active</span>
-                <span style={{ color: "#666", fontSize: 13, marginLeft: 12 }}>Upgrade anytime to keep full access at $19.99/month</span>
+                <span style={{ color: "#666", fontSize: 13, marginLeft: 12 }}>Choose a plan to keep full access after your trial</span>
               </div>
-              <button onClick={handleUpgrade} disabled={upgrading}
-                style={{ background: accent, color: "#000", border: "none", borderRadius: 8, padding: "10px 20px", fontWeight: 700, cursor: "pointer", fontSize: 13, fontFamily: "inherit", opacity: upgrading ? 0.7 : 1 }}>
-                {upgrading ? "Redirecting..." : "Upgrade to Pro →"}
+              <button onClick={() => setShowPricing(true)}
+                style={{ background: accent, color: "#000", border: "none", borderRadius: 8, padding: "10px 20px", fontWeight: 700, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+                View Plans →
               </button>
             </div>
 
