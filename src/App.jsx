@@ -210,8 +210,14 @@ export default function App() {
   const [upgrading, setUpgrading] = useState(false);
   const [coachPlan, setCoachPlan] = useState("basic");
   const [showPricing, setShowPricing] = useState(false);
-  const [theme, setTheme] = useState(() => localStorage.getItem("akeema-theme") || "dark");
+  const [theme, setTheme] = useState(() => { try { return localStorage.getItem("akeema-theme") || "dark"; } catch(e) { return "dark"; } });
   const isDark = theme === "dark";
+
+  function toggleTheme() {
+    const next = isDark ? "light" : "dark";
+    setTheme(next);
+    try { localStorage.setItem("akeema-theme", next); } catch(e) {}
+  }
   const [view, setView] = useState("dashboard");
   const [activeFilter, setActiveFilter] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -265,25 +271,19 @@ export default function App() {
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
-  const bg = isDark ? "#0d0d0d" : "#f5f5f0";
+  const bg = isDark ? "#0d0d0d" : "#f4f4ef";
   const cardBg = isDark ? "#161616" : "#ffffff";
-  const cardBorder = isDark ? "#2a2a2a" : "#e5e5e0";
+  const cardBorder = isDark ? "#2a2a2a" : "#e0e0db";
   const card = { background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 12 };
   const accent = "#f5a623";
   const green = "#4ade80";
   const red = "#f87171";
   const textPrimary = isDark ? "#ffffff" : "#111111";
-  const textSecondary = isDark ? "#555555" : "#666666";
-  const textMuted = isDark ? "#444444" : "#999999";
-  const borderColor = isDark ? "#1e1e1e" : "#e5e5e0";
-  const inputBg = isDark ? "#1e1e1e" : "#f0f0ec";
+  const textSecondary = isDark ? "#555555" : "#555555";
+  const textMuted = isDark ? "#444444" : "#888888";
+  const borderColor = isDark ? "#1e1e1e" : "#e0e0db";
+  const inputBg = isDark ? "#1e1e1e" : "#ececea";
   const navBg = isDark ? "#0d0d0d" : "#ffffff";
-
-  function toggleTheme() {
-    const next = isDark ? "light" : "dark";
-    setTheme(next);
-    localStorage.setItem("akeema-theme", next);
-  }
 
   // Load data from Supabase — only once, skip on tab switch
   const dataLoaded = React.useRef(false);
@@ -1088,7 +1088,7 @@ export default function App() {
     ];
 
     return (
-      <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", color: textPrimary }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap'); * { box-sizing: border-box; } @keyframes fadeUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:none } }`}</style>
 
         <div style={{ borderBottom: "1px solid #1e1e1e", padding: "16px clamp(16px,4vw,40px)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -1166,7 +1166,7 @@ export default function App() {
     const Shell = ({ title, subtitle, children }) => (
       <div style={{ background: "#0d0d0d", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap'); * { box-sizing: border-box; }`}</style>
-        <div style={{ borderBottom: `1px solid ${borderColor}`, background: navBg, padding: "16px clamp(16px, 4vw, 40px)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ borderBottom: "1px solid #1e1e1e", padding: "16px clamp(16px, 4vw, 40px)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => setView("dashboard")}>
             <div style={{ width: 32, height: 32, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
             <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
@@ -1432,24 +1432,23 @@ export default function App() {
     const tabLabels = { general: "General", account: "Account", billing: "Billing", automations: "Automations", privacy: "Privacy", help: "Help & Support" };
 
     return (
-      <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", color: textPrimary }}>
+      <div style={{ background: "#0d0d0d", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap');
           * { box-sizing: border-box; }
           @keyframes fadeUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:none } }
-          .settings-tab:hover { color: ${textPrimary} !important; }
+          .settings-tab:hover { color: #fff !important; }
         `}</style>
 
         {/* Header */}
-        <div style={{ borderBottom: `1px solid ${borderColor}`, background: navBg, padding: "16px clamp(16px, 4vw, 40px)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ borderBottom: "1px solid #1e1e1e", padding: "16px clamp(16px, 4vw, 40px)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => setView("dashboard")}>
             <div style={{ width: 32, height: 32, background: "#f5a623", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
             <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <button onClick={toggleTheme} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "6px 10px", color: textSecondary, cursor: "pointer", fontSize: 14, fontFamily: "inherit" }}>{isDark ? "☀️" : "🌙"}</button>
-            <button onClick={() => setView("dashboard")} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "6px 14px", color: textSecondary, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Dashboard</button>
-            <button onClick={() => signOut()} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "6px 14px", color: textSecondary, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Sign out</button>
+            <button onClick={() => setView("dashboard")} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>← Dashboard</button>
+            <button onClick={() => signOut()} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Sign out</button>
           </div>
         </div>
 
@@ -1478,11 +1477,11 @@ export default function App() {
 
         <div className="settings-body" style={{ display: "flex", minHeight: "calc(100vh - 73px)" }}>
           {/* Desktop Sidebar */}
-          <div className="settings-desktop-sidebar" style={{ borderRight: `1px solid ${borderColor}`, background: navBg, padding: "32px 0", minWidth: 200, flexShrink: 0 }}>
+          <div className="settings-desktop-sidebar" style={{ borderRight: "1px solid #1e1e1e", padding: "32px 0", minWidth: 200, flexShrink: 0 }}>
             <p style={{ color: "#444", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, padding: "0 24px", marginBottom: 12 }}>Settings</p>
             {tabs.map(tab => (
               <button key={tab} className="settings-tab" onClick={() => setSettingsTab(tab)}
-                style={{ width: "100%", textAlign: "left", padding: "10px 24px", background: settingsTab === tab ? inputBg : "none", border: "none", borderLeft: settingsTab === tab ? "2px solid #f5a623" : "2px solid transparent", color: settingsTab === tab ? textPrimary : textSecondary, cursor: "pointer", fontSize: 14, fontFamily: "inherit", transition: "all .15s" }}>{tab === "help" ? "💬 " : ""}
+                style={{ width: "100%", textAlign: "left", padding: "10px 24px", background: settingsTab === tab ? "#1a1a1a" : "none", border: "none", borderLeft: settingsTab === tab ? "2px solid #f5a623" : "2px solid transparent", color: settingsTab === tab ? "#fff" : "#666", cursor: "pointer", fontSize: 14, fontFamily: "inherit", transition: "all .15s" }}>{tab === "help" ? "💬 " : ""}
                 {tabLabels[tab]}
               </button>
             ))}
@@ -1494,16 +1493,16 @@ export default function App() {
             {/* GENERAL TAB */}
             {settingsTab === "general" && (
               <div>
-                <h2 style={{ fontFamily: "'DM Serif Display'", color: textPrimary, fontSize: 26, margin: "0 0 4px" }}>General</h2>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>General</h2>
                 <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Manage your coaching profile and preferences.</p>
 
-                <div style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 12, padding: 28, marginBottom: 20 }}>
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
                   <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 20px" }}>Coach Profile</h3>
                   {[["Display Name", user.firstName + " " + (user.lastName || ""), false], ["Email", user.emailAddresses[0]?.emailAddress, true]].map(([label, val, disabled]) => (
                     <div key={label} style={{ marginBottom: 20 }}>
                       <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>{label}</label>
                       <input defaultValue={val} disabled={disabled}
-                        style={{ width: "100%", background: disabled ? textMuted+"22" : inputBg, border: `1px solid ${cardBorder}`, borderRadius: 8, padding: "10px 14px", color: disabled ? textSecondary : textPrimary, fontSize: 14, fontFamily: "inherit", cursor: disabled ? "not-allowed" : "text" }} />
+                        style={{ width: "100%", background: disabled ? "#111" : "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "10px 14px", color: disabled ? "#444" : "#fff", fontSize: 14, fontFamily: "inherit", cursor: disabled ? "not-allowed" : "text" }} />
                       {disabled && <p style={{ color: "#444", fontSize: 11, margin: "4px 0 0" }}>Managed by your sign-in provider</p>}
                     </div>
                   ))}
@@ -1540,7 +1539,7 @@ export default function App() {
             {/* ACCOUNT TAB */}
             {settingsTab === "account" && (
               <div>
-                <h2 style={{ fontFamily: "'DM Serif Display'", color: textPrimary, fontSize: 26, margin: "0 0 4px" }}>Account</h2>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Account</h2>
                 <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Manage your account security and data.</p>
 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
@@ -1581,7 +1580,7 @@ export default function App() {
             {/* BILLING TAB */}
             {settingsTab === "billing" && (
               <div>
-                <h2 style={{ fontFamily: "'DM Serif Display'", color: textPrimary, fontSize: 26, margin: "0 0 4px" }}>Billing</h2>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Billing</h2>
                 <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Manage your subscription and payment details.</p>
 
                 <div style={{ background: "linear-gradient(135deg, #1a1200, #161616)", border: "1px solid #3a2800", borderRadius: 12, padding: 28, marginBottom: 20 }}>
@@ -1623,7 +1622,7 @@ export default function App() {
             {/* HELP TAB */}
             {settingsTab === "help" && (
               <div>
-                <h2 style={{ fontFamily: "'DM Serif Display'", color: textPrimary, fontSize: 26, margin: "0 0 4px" }}>Help & Support</h2>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Help & Support</h2>
                 <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Get instant help from our AI assistant or browse common topics.</p>
 
                 {/* Quick links */}
@@ -1752,7 +1751,7 @@ export default function App() {
             {/* AUTOMATIONS TAB */}
             {settingsTab === "automations" && (
               <div>
-                <h2 style={{ fontFamily: "'DM Serif Display'", color: textPrimary, fontSize: 26, margin: "0 0 4px" }}>Automations</h2>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Automations</h2>
                 <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Set weekly check-in reminders for each client. They'll receive an email with their check-in link automatically.</p>
 
                 {clients.filter(c => c.email).length === 0 && (
@@ -1836,7 +1835,7 @@ export default function App() {
             {/* PRIVACY TAB */}
             {settingsTab === "privacy" && (
               <div>
-                <h2 style={{ fontFamily: "'DM Serif Display'", color: textPrimary, fontSize: 26, margin: "0 0 4px" }}>Privacy</h2>
+                <h2 style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 26, margin: "0 0 4px" }}>Privacy</h2>
                 <p style={{ color: "#555", fontSize: 14, margin: "0 0 36px" }}>Control how your data and your clients' data is handled.</p>
 
                 <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 20 }}>
@@ -1892,12 +1891,11 @@ export default function App() {
   const approvedCheckins = checkins.filter(c => c.status === "approved");
 
   return (
-    <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", overflowX: "hidden", width: "100%", color: textPrimary }}>
+    <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", overflowX: "hidden", width: "100%" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap');
         * { box-sizing: border-box; }
         html, body, #root { overflow-x: hidden; max-width: 100%; }
-        input, select, textarea { color-scheme: dark; }
         @keyframes fadeUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:none } }
         .hover-card:hover { border-color: #3a3a3a !important; transform: translateY(-1px); transition: all .15s ease; }
         .cta-btn:hover { background: #e09920 !important; }
@@ -1925,7 +1923,10 @@ export default function App() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ color: textSecondary, fontSize: 13, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "inline-block" }}>{user.firstName || user.emailAddresses[0]?.emailAddress}</span>
-          <button onClick={() => setView("settings")} style={{ background: view === "settings" ? "#1e1e1e" : "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: view === "settings" ? "#fff" : "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>⚙ Settings</button>
+          <button onClick={toggleTheme} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "6px 14px", color: textSecondary, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+            {isDark ? "Light Mode" : "Dark Mode"}
+          </button>
+          <button onClick={() => setView("settings")} style={{ background: view === "settings" ? inputBg : "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "6px 14px", color: view === "settings" ? textPrimary : textSecondary, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>⚙ Settings</button>
           <button onClick={() => signOut()} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "6px 14px", color: textSecondary, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Sign out</button>
         </div>
       </div>
@@ -1948,7 +1949,7 @@ export default function App() {
             </div>
 
             <div style={{ marginBottom: 40, animation: "fadeUp .4s ease" }}>
-              <h1 className="dash-title" style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 36, margin: "0 0 6px" }}>
+              <h1 className="dash-title" style={{ fontFamily: "'DM Serif Display'", color: textPrimary, fontSize: 36, margin: "0 0 6px" }}>
                 Good morning, {user.firstName || "Coach"} 👋
               </h1>
               <p style={{ color: "#555", fontSize: 15, margin: 0 }}>
@@ -1971,8 +1972,8 @@ export default function App() {
                     borderColor: activeFilter === s.filter ? "#3b82f6" : s.highlight ? "#3a2800" : cardBorder,
                     background: activeFilter === s.filter ? "#0f1e3a" : s.highlight ? "#1a1200" : cardBg }}>
                   <div style={{ fontSize: 20, marginBottom: 8 }}>{s.icon}</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: activeFilter === s.filter ? "#3b82f6" : s.highlight ? accent : "#fff", marginBottom: 2 }}>{s.value}</div>
-                  <div style={{ fontSize: 12, color: activeFilter === s.filter ? "#3b82f6" : "#555", textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: activeFilter === s.filter ? "#3b82f6" : s.highlight ? accent : textPrimary, marginBottom: 2 }}>{s.value}</div>
+                  <div style={{ fontSize: 12, color: activeFilter === s.filter ? "#3b82f6" : textSecondary, textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</div>
                   {activeFilter === s.filter && <div style={{ fontSize: 10, color: "#3b82f6", marginTop: 4 }}>● Filtering</div>}
                 </div>
               ))}
@@ -2275,7 +2276,7 @@ export default function App() {
                       <input placeholder="Client name" value={newClientName} onChange={e => setNewClientName(e.target.value)}
                         style={{ width: "100%", background: inputBg, border: `1px solid ${cardBorder}`, borderRadius: 8, padding: "8px 12px", color: textPrimary, fontSize: 13, marginBottom: 8, fontFamily: "inherit" }} />
                       <input placeholder="Client email (optional — sends welcome email)" value={newClientEmail} onChange={e => setNewClientEmail(e.target.value)}
-                        style={{ width: "100%", background: inputBg, border: `1px solid ${cardBorder}`, borderRadius: 8, padding: "8px 12px", color: textPrimary, fontSize: 13, marginBottom: 8, fontFamily: "inherit" }} />
+                        style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, marginBottom: 8, fontFamily: "inherit" }} />
                       <select value={newClientGoal} onChange={e => setNewClientGoal(e.target.value)}
                         style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, marginBottom: 12, fontFamily: "inherit" }}>
                         {["Fat loss", "Muscle gain", "Strength", "Endurance", "General fitness"].map(g => <option key={g}>{g}</option>)}
