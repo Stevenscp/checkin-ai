@@ -210,14 +210,6 @@ export default function App() {
   const [upgrading, setUpgrading] = useState(false);
   const [coachPlan, setCoachPlan] = useState("basic");
   const [showPricing, setShowPricing] = useState(false);
-  const [theme, setTheme] = useState(() => { try { return localStorage.getItem("akeema-theme") || "dark"; } catch(e) { return "dark"; } });
-  const isDark = theme === "dark";
-
-  function toggleTheme() {
-    const next = isDark ? "light" : "dark";
-    setTheme(next);
-    try { localStorage.setItem("akeema-theme", next); } catch(e) {}
-  }
   const [view, setView] = useState("dashboard");
   const [activeFilter, setActiveFilter] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -271,19 +263,11 @@ export default function App() {
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
-  const bg = isDark ? "#0d0d0d" : "#f4f4ef";
-  const cardBg = isDark ? "#161616" : "#ffffff";
-  const cardBorder = isDark ? "#2a2a2a" : "#e0e0db";
-  const card = { background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 12 };
+  const bg = "#0d0d0d";
+  const card = { background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12 };
   const accent = "#f5a623";
   const green = "#4ade80";
   const red = "#f87171";
-  const textPrimary = isDark ? "#ffffff" : "#111111";
-  const textSecondary = isDark ? "#555555" : "#555555";
-  const textMuted = isDark ? "#444444" : "#888888";
-  const borderColor = isDark ? "#1e1e1e" : "#e0e0db";
-  const inputBg = isDark ? "#1e1e1e" : "#ececea";
-  const navBg = isDark ? "#0d0d0d" : "#ffffff";
 
   // Load data from Supabase — only once, skip on tab switch
   const dataLoaded = React.useRef(false);
@@ -1088,7 +1072,7 @@ export default function App() {
     ];
 
     return (
-      <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", color: textPrimary }}>
+      <div style={{ background: bg, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&display=swap'); * { box-sizing: border-box; } @keyframes fadeUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:none } }`}</style>
 
         <div style={{ borderBottom: "1px solid #1e1e1e", padding: "16px clamp(16px,4vw,40px)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -1916,18 +1900,15 @@ export default function App() {
         }
       `}</style>
 
-      <div className="dash-header-pad" style={{ borderBottom: `1px solid ${borderColor}`, background: navBg, padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="dash-header-pad" style={{ borderBottom: "1px solid #1e1e1e", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 32, height: 32, background: accent, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
           <span style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 20 }}>Akeema</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ color: textSecondary, fontSize: 13, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "inline-block" }}>{user.firstName || user.emailAddresses[0]?.emailAddress}</span>
-          <button onClick={toggleTheme} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "6px 14px", color: textSecondary, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
-            {isDark ? "Light Mode" : "Dark Mode"}
-          </button>
-          <button onClick={() => setView("settings")} style={{ background: view === "settings" ? inputBg : "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "6px 14px", color: view === "settings" ? textPrimary : textSecondary, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>⚙ Settings</button>
-          <button onClick={() => signOut()} style={{ background: "none", border: `1px solid ${borderColor}`, borderRadius: 8, padding: "6px 14px", color: textSecondary, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Sign out</button>
+          <span style={{ color: "#555", fontSize: 13, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "inline-block" }}>{user.firstName || user.emailAddresses[0]?.emailAddress}</span>
+          <button onClick={() => setView("settings")} style={{ background: view === "settings" ? "#1e1e1e" : "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: view === "settings" ? "#fff" : "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>⚙ Settings</button>
+          <button onClick={() => signOut()} style={{ background: "none", border: "1px solid #2a2a2a", borderRadius: 8, padding: "6px 14px", color: "#666", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>Sign out</button>
         </div>
       </div>
 
@@ -1949,7 +1930,7 @@ export default function App() {
             </div>
 
             <div style={{ marginBottom: 40, animation: "fadeUp .4s ease" }}>
-              <h1 className="dash-title" style={{ fontFamily: "'DM Serif Display'", color: textPrimary, fontSize: 36, margin: "0 0 6px" }}>
+              <h1 className="dash-title" style={{ fontFamily: "'DM Serif Display'", color: "#fff", fontSize: 36, margin: "0 0 6px" }}>
                 Good morning, {user.firstName || "Coach"} 👋
               </h1>
               <p style={{ color: "#555", fontSize: 15, margin: 0 }}>
@@ -1969,11 +1950,11 @@ export default function App() {
                 <div key={s.label} onClick={() => setActiveFilter(activeFilter === s.filter ? null : s.filter)}
                   className="hover-card"
                   style={{ ...card, padding: "20px 24px", cursor: "pointer", transition: "all .15s ease",
-                    borderColor: activeFilter === s.filter ? "#3b82f6" : s.highlight ? "#3a2800" : cardBorder,
-                    background: activeFilter === s.filter ? "#0f1e3a" : s.highlight ? "#1a1200" : cardBg }}>
+                    borderColor: activeFilter === s.filter ? "#3b82f6" : s.highlight ? "#3a2800" : "#2a2a2a",
+                    background: activeFilter === s.filter ? "#0f1e3a" : s.highlight ? "#1a1200" : "#161616" }}>
                   <div style={{ fontSize: 20, marginBottom: 8 }}>{s.icon}</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: activeFilter === s.filter ? "#3b82f6" : s.highlight ? accent : textPrimary, marginBottom: 2 }}>{s.value}</div>
-                  <div style={{ fontSize: 12, color: activeFilter === s.filter ? "#3b82f6" : textSecondary, textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: activeFilter === s.filter ? "#3b82f6" : s.highlight ? accent : "#fff", marginBottom: 2 }}>{s.value}</div>
+                  <div style={{ fontSize: 12, color: activeFilter === s.filter ? "#3b82f6" : "#555", textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</div>
                   {activeFilter === s.filter && <div style={{ fontSize: 10, color: "#3b82f6", marginTop: 4 }}>● Filtering</div>}
                 </div>
               ))}
@@ -2156,7 +2137,7 @@ export default function App() {
 
             <div className="dash-layout" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24 }}>
               <div>
-                <h2 style={{ color: textPrimary, fontSize: 16, fontWeight: 700, margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
+                <h2 style={{ color: "#fff", fontSize: 16, fontWeight: 700, margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
                   Pending Check-ins
                   {pendingCheckins.length > 0 && <span style={{ background: accent, color: "#000", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>{pendingCheckins.length}</span>}
                 </h2>
@@ -2230,7 +2211,7 @@ export default function App() {
               </div>
 
               <div>
-                <div style={{ ...card, padding: 24, marginBottom: 20, background: isDark ? "linear-gradient(135deg, #1a1200, #161616)" : "linear-gradient(135deg, #fff8ee, #fff)", borderColor: isDark ? "#2a2000" : "#f0d090" }}>
+                <div style={{ ...card, padding: 24, marginBottom: 20, background: "linear-gradient(135deg, #1a1200, #161616)", borderColor: "#2a2000" }}>
                   <h3 style={{ color: accent, fontSize: 13, fontWeight: 700, margin: "0 0 8px" }}>Client Check-in Form</h3>
                   <p style={{ color: "#777", fontSize: 12, lineHeight: 1.6, margin: "0 0 16px" }}>Share this link with your clients.</p>
                   <div style={{ background: "#0d0d0d", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#555", fontFamily: "monospace", marginBottom: 8, wordBreak: "break-all" }}>
@@ -2251,7 +2232,7 @@ export default function App() {
                 </div>
 
                 <div style={{ ...card, padding: 24 }}>
-                  <h3 style={{ color: textPrimary, fontSize: 14, fontWeight: 700, margin: "0 0 16px" }}>Your Clients</h3>
+                  <h3 style={{ color: "#fff", fontSize: 14, fontWeight: 700, margin: "0 0 16px" }}>Your Clients</h3>
                   {clients.length === 0 && <p style={{ color: "#555", fontSize: 13, margin: "0 0 16px" }}>No clients yet — add your first one!</p>}
                   {clients.map((cl, i) => (
                     <div key={cl.id} onClick={() => { setSelectedClient(cl); setView("progress"); }} className="hover-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: i < clients.length - 1 ? 14 : 0, marginBottom: i < clients.length - 1 ? 14 : 0, borderBottom: i < clients.length - 1 ? "1px solid #1e1e1e" : "none", cursor: "pointer", borderRadius: 6, padding: "6px 4px" }}>
@@ -2260,7 +2241,7 @@ export default function App() {
                           {cl.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                         </div>
                         <div>
-                          <div style={{ color: textPrimary, fontSize: 13, fontWeight: 500 }}>{cl.name}</div>
+                          <div style={{ color: "#ddd", fontSize: 13, fontWeight: 500 }}>{cl.name}</div>
                           <div style={{ color: "#555", fontSize: 11 }}>{cl.goal}</div>
                         </div>
                       </div>
@@ -2274,7 +2255,7 @@ export default function App() {
                   {showAddClient ? (
                     <div style={{ marginTop: 16, borderTop: "1px solid #1e1e1e", paddingTop: 16 }}>
                       <input placeholder="Client name" value={newClientName} onChange={e => setNewClientName(e.target.value)}
-                        style={{ width: "100%", background: inputBg, border: `1px solid ${cardBorder}`, borderRadius: 8, padding: "8px 12px", color: textPrimary, fontSize: 13, marginBottom: 8, fontFamily: "inherit" }} />
+                        style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, marginBottom: 8, fontFamily: "inherit" }} />
                       <input placeholder="Client email (optional — sends welcome email)" value={newClientEmail} onChange={e => setNewClientEmail(e.target.value)}
                         style={{ width: "100%", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 13, marginBottom: 8, fontFamily: "inherit" }} />
                       <select value={newClientGoal} onChange={e => setNewClientGoal(e.target.value)}
