@@ -25,7 +25,8 @@ function AIAnalysisStream({ checkin, onDone }) {
 💬 COACH MESSAGE DRAFT (a short, motivating message the coach can send)`,
           messages: [{
             role: "user",
-            content: `Analyze this client check-in:
+            content: (() => {
+              const textContent = `Analyze this client check-in${checkin.media_urls && checkin.media_urls.length > 0 ? " and their progress photos" : ""}:
 
 Client: ${checkin.clientName}
 Goal: ${checkin.goal}
@@ -41,7 +42,17 @@ Check-in Data:
 - Client notes: "${checkin.notes}"
 - Biggest challenge this week: "${checkin.challenge}"
 
-Provide coaching analysis and recommendations.`
+${checkin.media_urls && checkin.media_urls.length > 0 ? "Please analyze both the check-in data AND the progress photos. Comment on visible physique changes relevant to their " + checkin.goal + " goal." : "Provide coaching analysis and recommendations."}`;
+
+              if (checkin.media_urls && checkin.media_urls.length > 0) {
+                const imageUrls = checkin.media_urls.filter(u => !u.match(/\.(mp4|mov|webm|avi)$/i)).slice(0, 3);
+                return [
+                  ...imageUrls.map(url => ({ type: "image_url", image_url: { url } })),
+                  { type: "text", text: textContent }
+                ];
+              }
+              return textContent;
+            })()
           }]
         })
       });
@@ -261,6 +272,9 @@ export default function App() {
     name: "", weight: "", lastWeight: "", sleep: 7, stress: 5,
     adherence: 100, energy: 7, hunger: 5, notes: "", challenge: "", goal: "Fat loss", week: 1
   });
+  const [mediaFiles, setMediaFiles] = useState([]);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [clientCoachPlan, setClientCoachPlan] = useState("basic");
   const [formSubmitted, setFormSubmitted] = useState(false);
 
   const bg = "#0d0d0d";
@@ -333,7 +347,8 @@ export default function App() {
       name: newClientName.trim(),
       goal: newClientGoal,
       email: newClientEmail.trim() || null,
-      coach_email: user.emailAddresses?.[0]?.emailAddress || null
+      coach_email: user.emailAddresses?.[0]?.emailAddress || null,
+      coach_plan: coachPlan
     }).select().single();
     if (data) {
       setClients(prev => [data, ...prev]);
@@ -390,6 +405,24 @@ export default function App() {
       console.log("New client created, no coach email");
     }
 
+    // Upload media files if any
+    let mediaUrls = [];
+    if (mediaFiles.length > 0) {
+      setUploadingMedia(true);
+      for (const file of mediaFiles) {
+        const ext = file.name.split(".").pop();
+        const path = `${clientId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("checkin-media")
+          .upload(path, file, { contentType: file.type });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from("checkin-media").getPublicUrl(path);
+          if (urlData?.publicUrl) mediaUrls.push(urlData.publicUrl);
+        }
+      }
+      setUploadingMedia(false);
+    }
+
     const { data } = await supabase.from("checkins").insert({
       client_id: clientId,
       coach_id: user?.id || "public",
@@ -403,7 +436,8 @@ export default function App() {
       notes: clientForm.notes,
       challenge: clientForm.challenge,
       week_number: parseInt(clientForm.week),
-      status: "pending"
+      status: "pending",
+      media_urls: mediaUrls
     }).select("*, clients(name, goal)").single();
 
     if (data) {
@@ -457,7 +491,7 @@ export default function App() {
 
   async function saveClientEdit(clientId) {
     const coachEmail = user.emailAddresses?.[0]?.emailAddress || null;
-    await supabase.from("clients").update({ name: editName, goal: editGoal, email: editEmail || null, coach_email: coachEmail }).eq("id", clientId);
+    await supabase.from("clients").update({ name: editName, goal: editGoal, email: editEmail || null, coach_email: coachEmail, coach_plan: coachPlan }).eq("id", clientId);
     setClients(prev => prev.map(c => c.id === clientId ? { ...c, name: editName, goal: editGoal, email: editEmail || null, coach_email: coachEmail } : c));
     setEditingClient(null);
   }
@@ -485,11 +519,16 @@ export default function App() {
   }
 
   async function handleApprove() {
-    await supabase.from("checkins").update({
+    // Save media analysis separately if media was present
+    const updateData = {
       status: "approved",
       analysis: analysisText,
       coach_note: coachNote
-    }).eq("id", selectedCheckin.id);
+    };
+    if (selectedCheckin.media_urls && selectedCheckin.media_urls.length > 0) {
+      updateData.media_analysis = analysisText;
+    }
+    await supabase.from("checkins").update(updateData).eq("id", selectedCheckin.id);
 
     setCheckins(prev => prev.map(c =>
       c.id === selectedCheckin.id ? { ...c, status: "approved", analysis: analysisText, coachNote } : c
@@ -544,6 +583,20 @@ export default function App() {
   // Allow clients to access check-in form without signing in
   const isCheckinUrl = new URLSearchParams(window.location.search).get("checkin") === "true";
   const feedbackId = new URLSearchParams(window.location.search).get("feedback");
+
+  // Load coach plan for public checkin form
+  useEffect(() => {
+    if (!isCheckinUrl) return;
+    async function loadCoachPlanForClient() {
+      const { data } = await supabase
+        .from("clients")
+        .select("coach_plan")
+        .not("coach_plan", "is", null)
+        .limit(1);
+      if (data && data.length > 0) setClientCoachPlan(data[0].coach_plan || "basic");
+    }
+    loadCoachPlanForClient();
+  }, [isCheckinUrl]);
   if (!isLoaded) return null;
 
   // Public feedback page — no login needed
@@ -637,9 +690,44 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              <button onClick={handleClientSubmit}
-                style={{ width: "100%", background: "#f5a623", color: "#000", border: "none", borderRadius: 10, padding: "16px", fontWeight: 700, cursor: "pointer", fontSize: 16, fontFamily: "inherit" }}>
-                Submit Check-in →
+              {/* Media Upload - Pro coaches only */}
+              {clientCoachPlan === "pro" && (
+                <div style={{ background: "#161616", border: "1px solid #2a2a2a", borderRadius: 12, padding: 28, marginBottom: 24 }}>
+                  <h3 style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 8px" }}>Progress Photos & Videos</h3>
+                  <p style={{ color: "#555", fontSize: 12, margin: "0 0 16px" }}>Optional — your coach and AI will analyze your progress media.</p>
+                  <label style={{ display: "block", cursor: "pointer" }}>
+                    <div style={{ border: "2px dashed #333", borderRadius: 10, padding: "24px", textAlign: "center", transition: "border-color .2s" }}
+                      onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = "#f5a623"; }}
+                      onDragLeave={e => { e.currentTarget.style.borderColor = "#333"; }}
+                      onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = "#333"; const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/") || f.type.startsWith("video/")); setMediaFiles(prev => [...prev, ...files].slice(0, 5)); }}>
+                      <div style={{ fontSize: 28, marginBottom: 8 }}>📸</div>
+                      <p style={{ color: "#666", fontSize: 13, margin: "0 0 4px" }}>Drag & drop or click to upload</p>
+                      <p style={{ color: "#444", fontSize: 11, margin: 0 }}>Photos & videos · Max 5 files · 50MB each</p>
+                    </div>
+                    <input type="file" multiple accept="image/*,video/*" style={{ display: "none" }}
+                      onChange={e => { const files = Array.from(e.target.files).slice(0, 5); setMediaFiles(prev => [...prev, ...files].slice(0, 5)); }} />
+                  </label>
+                  {mediaFiles.length > 0 && (
+                    <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 8 }}>
+                      {mediaFiles.map((file, i) => (
+                        <div key={i} style={{ position: "relative", borderRadius: 8, overflow: "hidden", background: "#1e1e1e", aspectRatio: "1" }}>
+                          {file.type.startsWith("image/") ? (
+                            <img src={URL.createObjectURL(file)} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                          ) : (
+                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🎥</div>
+                          )}
+                          <button onClick={() => setMediaFiles(prev => prev.filter((_, j) => j !== i))}
+                            style={{ position: "absolute", top: 4, right: 4, background: "#f87171", border: "none", borderRadius: "50%", width: 20, height: 20, cursor: "pointer", fontSize: 10, color: "#000", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button onClick={handleClientSubmit} disabled={uploadingMedia}
+                style={{ width: "100%", background: "#f5a623", color: "#000", border: "none", borderRadius: 10, padding: "16px", fontWeight: 700, cursor: "pointer", fontSize: 16, fontFamily: "inherit", opacity: uploadingMedia ? 0.7 : 1 }}>
+                {uploadingMedia ? "Uploading media..." : "Submit Check-in →"}
               </button>
             </>
           )}
@@ -821,6 +909,32 @@ export default function App() {
             <p style={{ color: "#ccc", fontSize: 14, lineHeight: 1.7, margin: "0 0 12px" }}>"{c.notes}"</p>
             <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>Challenge: <span style={{ color: "#bbb" }}>{c.challenge}</span></p>
           </div>
+
+          {/* Progress Media */}
+          {c.media_urls && c.media_urls.length > 0 && (
+            <div style={{ ...card, padding: 24, marginBottom: 20 }}>
+              <h3 style={{ color: "#555", fontSize: 11, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 16px" }}>Progress Media ({c.media_urls.length})</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+                {c.media_urls.map((url, i) => (
+                  <div key={i} style={{ borderRadius: 10, overflow: "hidden", background: "#1e1e1e", aspectRatio: "1", position: "relative" }}>
+                    {url.match(/\.(mp4|mov|webm|avi)$/i) ? (
+                      <video src={url} controls style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <a href={url} target="_blank" rel="noreferrer">
+                        <img src={url} alt={`Progress ${i+1}`} style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "pointer" }} />
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {c.media_analysis && (
+                <div style={{ marginTop: 16, padding: 16, background: "#1e1e1e", borderRadius: 8, borderLeft: "3px solid #f5a623" }}>
+                  <p style={{ color: "#f5a623", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 8px" }}>⚡ AI Photo Analysis</p>
+                  <p style={{ color: "#ccc", fontSize: 13, lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>{c.media_analysis}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {isReadOnly ? (
             // Read-only view for already approved checkins
